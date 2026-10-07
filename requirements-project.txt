@@ -1,0 +1,12 @@
+# Install the pinned course fork after initializing the Git submodule.
+-e ./third_party/RecBole_DSAIT4335
+
+# RecBole's current data code is incompatible with pandas 3.x and NumPy 2.x.
+numpy==1.26.4
+pandas==2.2.3
+
+# Numerical stack used to produce the committed Task 1 results.
+torch==2.14.1
+scipy==1.17.1
+scikit-learn==1.9.1
+PyYAML==6.0.3

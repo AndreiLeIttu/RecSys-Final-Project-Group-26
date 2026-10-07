@@ -1,0 +1,6 @@
+model: SLIMElastic
+positive_only: true
+hide_item: true
+dataset: ml-100k
+alpha: 0.2
+l1_ratio: 0.01

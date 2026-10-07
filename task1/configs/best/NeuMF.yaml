@@ -1,0 +1,17 @@
+model: NeuMF
+mf_train: true
+mlp_train: true
+use_pretrain: false
+epochs: 20
+train_batch_size: 2048
+learner: adam
+eval_step: 1
+stopping_step: 10
+dataset: ml-100k
+dropout_prob: 0.1
+learning_rate: 0.001
+mf_embedding_size: 64
+mlp_embedding_size: 64
+mlp_hidden_size:
+- 128
+- 64

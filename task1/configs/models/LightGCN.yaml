@@ -1,0 +1,8 @@
+model: LightGCN
+require_pow: false
+epochs: 20
+train_batch_size: 4096
+learner: adam
+eval_step: 1
+stopping_step: 10
+

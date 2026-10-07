@@ -1,0 +1,69 @@
+Random:
+  - {}
+
+Pop:
+  - {}
+
+ItemKNN:
+  - {k: 50}
+  - {k: 100}
+  - {k: 200}
+
+UserKNN:
+  - {k: 50}
+  - {k: 100}
+  - {k: 200}
+
+BPR:
+  - {embedding_size: 64, learning_rate: 0.001, reg_weight: 0.00001}
+  - {embedding_size: 64, learning_rate: 0.005, reg_weight: 0.00001}
+  - {embedding_size: 128, learning_rate: 0.001, reg_weight: 0.00001}
+  - {embedding_size: 128, learning_rate: 0.005, reg_weight: 0.00001}
+  - {embedding_size: 64, learning_rate: 0.001, reg_weight: 0.0001}
+  - {embedding_size: 128, learning_rate: 0.001, reg_weight: 0.0001}
+
+FISM:
+  - {embedding_size: 32, alpha: 0.0, reg_weights: [0.001, 0.001]}
+  - {embedding_size: 32, alpha: 0.5, reg_weights: [0.001, 0.001]}
+  - {embedding_size: 64, alpha: 0.0, reg_weights: [0.001, 0.001]}
+  - {embedding_size: 64, alpha: 0.5, reg_weights: [0.001, 0.001]}
+  - {embedding_size: 64, alpha: 0.0, reg_weights: [0.01, 0.01]}
+  - {embedding_size: 64, alpha: 0.5, reg_weights: [0.01, 0.01]}
+
+SLIMElastic:
+  - {alpha: 0.05, l1_ratio: 0.01}
+  - {alpha: 0.05, l1_ratio: 0.02}
+  - {alpha: 0.2, l1_ratio: 0.01}
+  - {alpha: 0.2, l1_ratio: 0.02}
+  - {alpha: 0.2, l1_ratio: 0.1}
+  - {alpha: 0.5, l1_ratio: 0.02}
+
+EASE:
+  - {reg_weight: 50.0}
+  - {reg_weight: 250.0}
+  - {reg_weight: 500.0}
+
+NeuMF:
+  - {mf_embedding_size: 32, mlp_embedding_size: 32, mlp_hidden_size: [64, 32], dropout_prob: 0.0, learning_rate: 0.001}
+  - {mf_embedding_size: 32, mlp_embedding_size: 32, mlp_hidden_size: [64, 32], dropout_prob: 0.1, learning_rate: 0.001}
+  - {mf_embedding_size: 64, mlp_embedding_size: 64, mlp_hidden_size: [128, 64], dropout_prob: 0.0, learning_rate: 0.001}
+  - {mf_embedding_size: 64, mlp_embedding_size: 64, mlp_hidden_size: [128, 64], dropout_prob: 0.1, learning_rate: 0.001}
+  - {mf_embedding_size: 64, mlp_embedding_size: 64, mlp_hidden_size: [128, 64], dropout_prob: 0.3, learning_rate: 0.001}
+  - {mf_embedding_size: 64, mlp_embedding_size: 64, mlp_hidden_size: [128, 64], dropout_prob: 0.1, learning_rate: 0.005}
+
+NGCF:
+  - {embedding_size: 32, hidden_size_list: [32, 32], node_dropout: 0.0, message_dropout: 0.1, reg_weight: 0.00001}
+  - {embedding_size: 32, hidden_size_list: [32, 32, 32], node_dropout: 0.0, message_dropout: 0.1, reg_weight: 0.00001}
+  - {embedding_size: 64, hidden_size_list: [64, 64], node_dropout: 0.0, message_dropout: 0.1, reg_weight: 0.00001}
+  - {embedding_size: 64, hidden_size_list: [64, 64, 64], node_dropout: 0.0, message_dropout: 0.1, reg_weight: 0.00001}
+  - {embedding_size: 64, hidden_size_list: [64, 64, 64], node_dropout: 0.1, message_dropout: 0.1, reg_weight: 0.00001}
+  - {embedding_size: 64, hidden_size_list: [64, 64, 64], node_dropout: 0.0, message_dropout: 0.3, reg_weight: 0.0001}
+
+LightGCN:
+  - {embedding_size: 32, n_layers: 1, reg_weight: 0.00001, learning_rate: 0.001}
+  - {embedding_size: 32, n_layers: 2, reg_weight: 0.0001, learning_rate: 0.001}
+  - {embedding_size: 64, n_layers: 1, reg_weight: 0.0001, learning_rate: 0.001}
+  - {embedding_size: 64, n_layers: 2, reg_weight: 0.0001, learning_rate: 0.001}
+  - {embedding_size: 64, n_layers: 3, reg_weight: 0.0001, learning_rate: 0.001}
+  - {embedding_size: 64, n_layers: 3, reg_weight: 0.00001, learning_rate: 0.005}
+

@@ -1,0 +1,10 @@
+model: NeuMF
+mf_train: true
+mlp_train: true
+use_pretrain: false
+epochs: 20
+train_batch_size: 2048
+learner: adam
+eval_step: 1
+stopping_step: 10
+

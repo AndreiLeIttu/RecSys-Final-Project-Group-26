@@ -1,0 +1,13 @@
+model: BPR
+train_neg_sample_args:
+  distribution: uniform
+  sample_num: 1
+epochs: 20
+train_batch_size: 2048
+learner: adam
+eval_step: 1
+stopping_step: 10
+dataset: ml-100k
+embedding_size: 64
+learning_rate: 0.005
+reg_weight: 1.0e-05

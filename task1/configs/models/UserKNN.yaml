@@ -1,0 +1,3 @@
+model: ItemKNN
+knn_method: user
+

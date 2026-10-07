@@ -1,0 +1,4 @@
+model: ItemKNN
+knn_method: item
+dataset: ml-100k
+k: 100

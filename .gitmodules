@@ -1,0 +1,3 @@
+[submodule "third_party/RecBole_DSAIT4335"]
+	path = third_party/RecBole_DSAIT4335
+	url = https://github.com/masoudmansoury/RecBole_DSAIT4335.git

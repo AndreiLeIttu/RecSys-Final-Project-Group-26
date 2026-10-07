@@ -1,0 +1,331 @@
+{
+  "BPR": {
+    "best_valid_result": {
+      "hit@10": 0.737,
+      "mrr@10": 0.375,
+      "ndcg@10": 0.2233,
+      "precision@10": 0.1552,
+      "recall@10": 0.2027
+    },
+    "best_valid_score": 0.375,
+    "candidate_key": "24e2db8f1b9d533a",
+    "checkpoint": "artifacts/best/BPR.pth",
+    "device": "cpu",
+    "duration_seconds": 13.209328199998708,
+    "model": "BPR",
+    "parameters": {
+      "embedding_size": 64,
+      "learning_rate": 0.005,
+      "reg_weight": 1e-05
+    },
+    "recbole_model": "BPR",
+    "seed": 2020,
+    "status": "ok",
+    "test_result": {
+      "hit@10": 0.7731,
+      "mrr@10": 0.4565,
+      "ndcg@10": 0.277,
+      "precision@10": 0.1897,
+      "recall@10": 0.2347
+    }
+  },
+  "EASE": {
+    "best_valid_result": {
+      "hit@10": 0.7847,
+      "mrr@10": 0.4201,
+      "ndcg@10": 0.2563,
+      "precision@10": 0.1755,
+      "recall@10": 0.2389
+    },
+    "best_valid_score": 0.4201,
+    "candidate_key": "b51038f1afc94cc3",
+    "checkpoint": "artifacts/best/EASE.pth",
+    "device": "cpu",
+    "duration_seconds": 1.7164464000015869,
+    "model": "EASE",
+    "parameters": {
+      "reg_weight": 250.0
+    },
+    "recbole_model": "EASE",
+    "seed": 2020,
+    "status": "ok",
+    "test_result": {
+      "hit@10": 0.8197,
+      "mrr@10": 0.5277,
+      "ndcg@10": 0.3295,
+      "precision@10": 0.2206,
+      "recall@10": 0.2805
+    }
+  },
+  "FISM": {
+    "best_valid_result": {
+      "hit@10": 0.6755,
+      "mrr@10": 0.3313,
+      "ndcg@10": 0.1905,
+      "precision@10": 0.13,
+      "recall@10": 0.1795
+    },
+    "best_valid_score": 0.3313,
+    "candidate_key": "10fbca908af243e6",
+    "checkpoint": "artifacts/best/FISM.pth",
+    "device": "cpu",
+    "duration_seconds": 294.5476400000007,
+    "model": "FISM",
+    "parameters": {
+      "alpha": 0.0,
+      "embedding_size": 64,
+      "reg_weights": [
+        0.001,
+        0.001
+      ]
+    },
+    "recbole_model": "FISM",
+    "seed": 2020,
+    "status": "ok",
+    "test_result": {
+      "hit@10": 0.7296,
+      "mrr@10": 0.4225,
+      "ndcg@10": 0.2427,
+      "precision@10": 0.1606,
+      "recall@10": 0.2122
+    }
+  },
+  "ItemKNN": {
+    "best_valid_result": {
+      "hit@10": 0.7328,
+      "mrr@10": 0.3779,
+      "ndcg@10": 0.2213,
+      "precision@10": 0.1554,
+      "recall@10": 0.2058
+    },
+    "best_valid_score": 0.3779,
+    "candidate_key": "c4987e0fb27df611",
+    "checkpoint": "artifacts/best/ItemKNN.pth",
+    "device": "cpu",
+    "duration_seconds": 2.269633399999293,
+    "model": "ItemKNN",
+    "parameters": {
+      "k": 100
+    },
+    "recbole_model": "ItemKNN",
+    "seed": 2020,
+    "status": "ok",
+    "test_result": {
+      "hit@10": 0.7847,
+      "mrr@10": 0.4623,
+      "ndcg@10": 0.2834,
+      "precision@10": 0.1931,
+      "recall@10": 0.247
+    }
+  },
+  "LightGCN": {
+    "best_valid_result": {
+      "hit@10": 0.6755,
+      "mrr@10": 0.3248,
+      "ndcg@10": 0.194,
+      "precision@10": 0.1369,
+      "recall@10": 0.1781
+    },
+    "best_valid_score": 0.3248,
+    "candidate_key": "055d2fa6755661ea",
+    "checkpoint": "artifacts/best/LightGCN.pth",
+    "device": "cpu",
+    "duration_seconds": 68.57588240000041,
+    "model": "LightGCN",
+    "parameters": {
+      "embedding_size": 64,
+      "learning_rate": 0.005,
+      "n_layers": 3,
+      "reg_weight": 1e-05
+    },
+    "recbole_model": "LightGCN",
+    "seed": 2020,
+    "status": "ok",
+    "test_result": {
+      "hit@10": 0.7073,
+      "mrr@10": 0.4101,
+      "ndcg@10": 0.239,
+      "precision@10": 0.1604,
+      "recall@10": 0.2001
+    }
+  },
+  "NGCF": {
+    "best_valid_result": {
+      "hit@10": 0.6448,
+      "mrr@10": 0.3045,
+      "ndcg@10": 0.1712,
+      "precision@10": 0.1246,
+      "recall@10": 0.1531
+    },
+    "best_valid_score": 0.3045,
+    "candidate_key": "9b2ee791926b0406",
+    "checkpoint": "artifacts/best/NGCF.pth",
+    "device": "cpu",
+    "duration_seconds": 108.4485749000014,
+    "model": "NGCF",
+    "parameters": {
+      "embedding_size": 64,
+      "hidden_size_list": [
+        64,
+        64
+      ],
+      "message_dropout": 0.1,
+      "node_dropout": 0.0,
+      "reg_weight": 1e-05
+    },
+    "recbole_model": "NGCF",
+    "seed": 2020,
+    "status": "ok",
+    "test_result": {
+      "hit@10": 0.6797,
+      "mrr@10": 0.3699,
+      "ndcg@10": 0.2104,
+      "precision@10": 0.1526,
+      "recall@10": 0.1768
+    }
+  },
+  "NeuMF": {
+    "best_valid_result": {
+      "hit@10": 0.7466,
+      "mrr@10": 0.3701,
+      "ndcg@10": 0.2233,
+      "precision@10": 0.1554,
+      "recall@10": 0.2114
+    },
+    "best_valid_score": 0.3701,
+    "candidate_key": "b3333ade26bb5021",
+    "checkpoint": "artifacts/best/NeuMF.pth",
+    "device": "cpu",
+    "duration_seconds": 47.14657839999927,
+    "model": "NeuMF",
+    "parameters": {
+      "dropout_prob": 0.1,
+      "learning_rate": 0.001,
+      "mf_embedding_size": 64,
+      "mlp_embedding_size": 64,
+      "mlp_hidden_size": [
+        128,
+        64
+      ]
+    },
+    "recbole_model": "NeuMF",
+    "seed": 2020,
+    "status": "ok",
+    "test_result": {
+      "hit@10": 0.7646,
+      "mrr@10": 0.4665,
+      "ndcg@10": 0.2817,
+      "precision@10": 0.192,
+      "recall@10": 0.2357
+    }
+  },
+  "Pop": {
+    "best_valid_result": {
+      "hit@10": 0.4634,
+      "mrr@10": 0.1846,
+      "ndcg@10": 0.0946,
+      "precision@10": 0.0754,
+      "recall@10": 0.0836
+    },
+    "best_valid_score": 0.1846,
+    "candidate_key": "6764992017668106",
+    "checkpoint": "artifacts/best/Pop.pth",
+    "device": "cpu",
+    "duration_seconds": 1.3194680000015069,
+    "model": "Pop",
+    "parameters": {},
+    "recbole_model": "Pop",
+    "seed": 2020,
+    "status": "ok",
+    "test_result": {
+      "hit@10": 0.4708,
+      "mrr@10": 0.1896,
+      "ndcg@10": 0.1005,
+      "precision@10": 0.0824,
+      "recall@10": 0.0838
+    }
+  },
+  "Random": {
+    "best_valid_result": {
+      "hit@10": 0.0414,
+      "mrr@10": 0.0117,
+      "ndcg@10": 0.005,
+      "precision@10": 0.0043,
+      "recall@10": 0.0043
+    },
+    "best_valid_score": 0.0117,
+    "candidate_key": "68a475d3a0aeb6d2",
+    "checkpoint": "artifacts/best/Random.pth",
+    "device": "cpu",
+    "duration_seconds": 3.392610599999898,
+    "model": "Random",
+    "parameters": {},
+    "recbole_model": "Random",
+    "seed": 2020,
+    "status": "ok",
+    "test_result": {
+      "hit@10": 0.0636,
+      "mrr@10": 0.0185,
+      "ndcg@10": 0.0075,
+      "precision@10": 0.007,
+      "recall@10": 0.0057
+    }
+  },
+  "SLIMElastic": {
+    "best_valid_result": {
+      "hit@10": 0.7731,
+      "mrr@10": 0.4225,
+      "ndcg@10": 0.2568,
+      "precision@10": 0.1757,
+      "recall@10": 0.2378
+    },
+    "best_valid_score": 0.4225,
+    "candidate_key": "7ded1368e67bb3b2",
+    "checkpoint": "artifacts/best/SLIMElastic.pth",
+    "device": "cpu",
+    "duration_seconds": 13.942384499998298,
+    "model": "SLIMElastic",
+    "parameters": {
+      "alpha": 0.2,
+      "l1_ratio": 0.01
+    },
+    "recbole_model": "SLIMElastic",
+    "seed": 2020,
+    "status": "ok",
+    "test_result": {
+      "hit@10": 0.8187,
+      "mrr@10": 0.526,
+      "ndcg@10": 0.3269,
+      "precision@10": 0.2198,
+      "recall@10": 0.2786
+    }
+  },
+  "UserKNN": {
+    "best_valid_result": {
+      "hit@10": 0.755,
+      "mrr@10": 0.401,
+      "ndcg@10": 0.2355,
+      "precision@10": 0.1562,
+      "recall@10": 0.216
+    },
+    "best_valid_score": 0.401,
+    "candidate_key": "b8bb51fd4162b9b7",
+    "checkpoint": "artifacts/best/UserKNN.pth",
+    "device": "cpu",
+    "duration_seconds": 1.9935035000016796,
+    "model": "UserKNN",
+    "parameters": {
+      "k": 50
+    },
+    "recbole_model": "ItemKNN",
+    "seed": 2020,
+    "status": "ok",
+    "test_result": {
+      "hit@10": 0.7932,
+      "mrr@10": 0.477,
+      "ndcg@10": 0.2877,
+      "precision@10": 0.1909,
+      "recall@10": 0.2524
+    }
+  }
+}

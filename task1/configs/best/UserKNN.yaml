@@ -1,0 +1,4 @@
+model: ItemKNN
+knn_method: user
+dataset: ml-100k
+k: 50

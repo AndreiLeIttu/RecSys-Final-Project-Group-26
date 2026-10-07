@@ -1,0 +1,12 @@
+model: LightGCN
+require_pow: false
+epochs: 20
+train_batch_size: 4096
+learner: adam
+eval_step: 1
+stopping_step: 10
+dataset: ml-100k
+embedding_size: 64
+learning_rate: 0.005
+n_layers: 3
+reg_weight: 1.0e-05

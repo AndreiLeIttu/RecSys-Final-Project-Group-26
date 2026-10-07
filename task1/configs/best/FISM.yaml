@@ -1,0 +1,16 @@
+model: FISM
+train_neg_sample_args:
+  distribution: uniform
+  sample_num: 1
+epochs: 20
+train_batch_size: 2048
+learner: adam
+learning_rate: 0.001
+eval_step: 1
+stopping_step: 10
+dataset: ml-100k
+alpha: 0.0
+embedding_size: 64
+reg_weights:
+- 0.001
+- 0.001

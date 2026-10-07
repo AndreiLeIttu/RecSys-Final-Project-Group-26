@@ -1,0 +1,22 @@
+dataset: ml-100k
+seed: 2020
+reproducibility: True
+use_gpu: False
+
+eval_args:
+  split:
+    RS: [0.8, 0.1, 0.1]
+  group_by: user
+  order: RO
+  mode: full
+
+metrics: [Recall, MRR, NDCG, Hit, Precision]
+topk: [10]
+valid_metric: MRR@10
+
+eval_batch_size: 4096
+show_progress: True
+save_dataset: False
+save_dataloaders: False
+log_wandb: False
+

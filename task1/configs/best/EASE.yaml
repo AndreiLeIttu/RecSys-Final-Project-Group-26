@@ -1,0 +1,3 @@
+model: EASE
+dataset: ml-100k
+reg_weight: 250.0

@@ -1,0 +1,8 @@
+model: NGCF
+epochs: 20
+train_batch_size: 2048
+learner: adam
+learning_rate: 0.001
+eval_step: 1
+stopping_step: 10
+
