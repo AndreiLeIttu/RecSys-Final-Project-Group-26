@@ -40,7 +40,7 @@ and Hit@10. Neural models train for at most 20 epochs with per-epoch validation
 and early stopping; only the selected validation winner is evaluated on the
 test set. All observed interactions are treated as positive.
 
-Run all 47 configured trials:
+Run all 50 configured trials (47 individual-model trials and 3 hybrid trials):
 
 ```powershell
 python -m task1.tune_models
@@ -77,3 +77,44 @@ config, model, dataset, train_data, valid_data, test_data = (
     load_data_and_model("artifacts/best/EASE.pth")
 )
 ```
+## Feature combination hybrid
+
+`FeatureCombination` concatenates learned user/item embeddings and their
+elementwise product, user/movie genres, user/movie text vectors, and movie
+popularity. A neural network with one hidden layer produces a relevance score.
+It trains with pairwise logistic loss and RecBole's uniform negative sampling.
+
+The model is in `task1/feature_combination/model.py`, feature preparation is in
+`task1/feature_combination/features.py`, and settings are in
+`task1/configs/models/FeatureCombination.yaml`. It uses the same split and
+validation MRR@10 selection as the individual models.
+
+Movie metadata in `data/movie_metadata.tsv` comes from Assignment 1's
+`movielens/items.txt` (original movie IDs, titles, genres, descriptions).
+Text embeddings use TF-IDF followed by a 32-dimensional SVD projection, cached
+under `artifacts/features/`. The text transform uses the available catalog
+metadata, including held-out items, but no held-out interaction labels.
+User profiles average the features of training-history movies; popularity is
+the normalized log of training interaction counts. Profiles and popularity
+are rebuilt for each training split and stored as checkpoint buffers.
+
+Tune its three declared candidates and evaluate the validation winner:
+
+```powershell
+python -m task1.tune_models --models FeatureCombination
+```
+
+For a one-epoch validation-only installation check:
+
+```powershell
+python -c "from task1.experiment import train_model; from task1.model_registry import MODEL_SPECS; print(train_model(MODEL_SPECS['FeatureCombination'], {'epochs': 1, 'show_progress': False}))"
+```
+
+Load it through `task1.experiment.load_data_and_model`, just like other selected
+models. No pretrained collaborative checkpoint or transformer download is needed.
+After the smoke check, verify scoring, checkpoint reload, and feature switches with
+`python -m task1.feature_combination.check`.
+Feature-removal experiments use overrides `use_genres`, `use_text`, and
+`use_popularity`: disable all three for the interaction-only comparison, or
+disable each individually to measure its contribution. Select settings using
+validation before conducting the final test comparisons.

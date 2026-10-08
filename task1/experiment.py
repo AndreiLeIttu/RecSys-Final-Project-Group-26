@@ -27,6 +27,13 @@ from recbole.utils import get_model, get_trainer, init_logger, init_seed
 DATASET = "ml-100k"
 
 
+def model_class(name):
+    if name == "FeatureCombination":
+        from task1.feature_combination.model import FeatureCombination
+        return FeatureCombination
+    return get_model(name)
+
+
 def resolve_project_path(path: str | Path) -> Path:
     path = Path(path)
     return path if path.is_absolute() else PROJECT_ROOT / path
@@ -51,7 +58,7 @@ def build_config(
         config_dict.update(overrides)
 
     return Config(
-        model=spec.recbole_model,
+        model=model_class(spec.recbole_model),
         dataset=DATASET,
         config_file_list=config_files(spec),
         config_dict=config_dict,
@@ -73,7 +80,7 @@ def train_model(
     train_data, valid_data, _ = data_preparation(config, dataset)
 
     init_seed(config["seed"] + config["local_rank"], config["reproducibility"])
-    model = get_model(config["model"])(config, train_data._dataset).to(config["device"])
+    model = model_class(config["model"])(config, train_data._dataset).to(config["device"])
     trainer = get_trainer(config["MODEL_TYPE"], config["model"])(config, model)
 
     best_valid_score, best_valid_result = trainer.fit(
@@ -137,7 +144,7 @@ def load_data_and_model(model_file: str | Path):
     dataset = create_dataset(config)
     train_data, valid_data, test_data = data_preparation(config, dataset)
     init_seed(config["seed"], config["reproducibility"])
-    model = get_model(config["model"])(config, train_data._dataset).to(config["device"])
+    model = model_class(config["model"])(config, train_data._dataset).to(config["device"])
     model.load_state_dict(checkpoint["state_dict"])
     model.load_other_parameter(checkpoint.get("other_parameter"))
     return config, model, dataset, train_data, valid_data, test_data

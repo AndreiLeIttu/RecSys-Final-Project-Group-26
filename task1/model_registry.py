@@ -40,6 +40,7 @@ MODEL_SPECS = {
         _spec("NeuMF"),
         _spec("NGCF"),
         _spec("LightGCN"),
+        _spec("FeatureCombination"),
     )
 }
 

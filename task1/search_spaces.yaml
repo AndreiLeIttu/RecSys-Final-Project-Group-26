@@ -1,3 +1,8 @@
+FeatureCombination:
+  - {hidden_size: 64, learning_rate: 0.001, reg_weight: 0.00001}
+  - {hidden_size: 64, learning_rate: 0.005, reg_weight: 0.00001}
+  - {hidden_size: 128, learning_rate: 0.001, reg_weight: 0.0001}
+
 Random:
   - {}
 

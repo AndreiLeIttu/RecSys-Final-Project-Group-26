@@ -1,0 +1,18 @@
+model: FeatureCombination
+metadata_path: data/movie_metadata.tsv
+embedding_size: 32
+hidden_size: 64
+text_dimension: 32
+use_genres: true
+use_text: true
+use_popularity: true
+reg_weight: 0.00001
+learning_rate: 0.001
+train_neg_sample_args:
+  distribution: uniform
+  sample_num: 1
+epochs: 20
+train_batch_size: 2048
+learner: adam
+eval_step: 1
+stopping_step: 5
