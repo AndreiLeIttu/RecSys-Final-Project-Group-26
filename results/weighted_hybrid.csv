@@ -1,0 +1,2 @@
+model,recall@10,mrr@10,ndcg@10,hit@10,precision@10
+WeightedHybrid,0.2846,0.5323,0.3347,0.8293,0.2252

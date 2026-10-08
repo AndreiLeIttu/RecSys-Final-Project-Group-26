@@ -15,7 +15,26 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements-project.txt
 ```
 
-The committed results were produced with Python 3.11.9 on CPU.
+The committed Task 1.1-1.2 results were produced with Python 3.11.9 on CPU.
+
+On macOS/Linux, from the repository root:
+
+```bash
+git submodule update --init --recursive
+python3.11 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements-project.txt
+```
+
+If Python 3.11 is not installed, `uv` can provision it and install the same
+dependencies:
+
+```bash
+uv venv --python 3.11 .venv
+uv pip install --python .venv/bin/python -r requirements-project.txt
+source .venv/bin/activate
+```
 
 For an existing clone, initialize or update the pinned submodule with:
 
@@ -77,6 +96,7 @@ config, model, dataset, train_data, valid_data, test_data = (
     load_data_and_model("artifacts/best/EASE.pth")
 )
 ```
+
 ## Feature combination hybrid
 
 `FeatureCombination` concatenates learned user/item embeddings and their
@@ -118,3 +138,90 @@ Feature-removal experiments use overrides `use_genres`, `use_text`, and
 `use_popularity`: disable all three for the interaction-only comparison, or
 disable each individually to measure its contribution. Select settings using
 validation before conducting the final test comparisons.
+
+## Task 1.3: Weighted hybrid recommender
+
+Run after setup, from the repository root:
+
+```bash
+python -m task1.train_hybrid
+```
+
+This combines all eleven individual recommenders. It reuses local checkpoints
+in `artifacts/best/`. Since checkpoints are not committed, missing ones are
+automatically trained using the selected parameters in `results/best_models.json`
+and the model configurations. You do not need to repeat the 47-trial search.
+The existing Task 1.2 result files are preserved. Training all missing models can
+take several minutes on CPU.
+
+For a smaller run, choose at least two distinct models:
+
+```bash
+python -m task1.train_hybrid --models Pop EASE
+```
+
+### How coefficients are learned
+
+1. Freeze the individual models trained on the original 80% training split.
+   Check that every checkpoint reproduces the same user/item token mappings
+   and train/validation/test splits.
+2. Collect each model's full-catalog prediction scores. Min-max normalize scores
+   separately for each user and model using nonpadding items unseen in training.
+   Constant score ranges become zero. This keeps different score scales comparable.
+3. Build regression examples from all validation interactions (target 1) and
+   five sampled unobserved items per positive (target 0), without replacement
+   per user. Exclude padding, training interactions, and validation positives
+   from negative sampling. Test labels are never used in fitting, normalization,
+   or negative sampling. Unobserved items are assumed negatives and may include
+   future test positives; they are not verified dislikes.
+4. Fit a linear least-squares regression with an intercept, nonnegative model
+   coefficients, and a sum-to-one constraint using SciPy's SLSQP optimizer.
+   Minimize `mean((intercept + X @ weights - targets) ** 2)`.
+5. Rank items by the learned weighted sum of normalized component scores.
+   The intercept is saved for regression predictions but has no effect on ranking.
+   Evaluate once on the test split with the existing RecBole metrics and history
+   masking (training items for validation; training and validation items for test).
+
+The validation metrics are **fit diagnostics**, since this split was used both
+for individual-model selection and coefficient fitting. Test metrics are the
+held-out evaluation. This implements Task 1.3; hybrid hyperparameter tuning
+(Task 1.5) and independently implemented evaluation metrics (Task 2) remain
+separate work. Regression predictions are ranking scores, not calibrated
+probabilities, and need not fall in [0, 1].
+
+Options: `--negative-ratio 5` controls the sampled negative count;
+`--user-batch-size 16` controls score collection memory. Keep the batch size fixed
+for reproducibility: the course Random model draws new scores on each call.
+
+Outputs:
+
+- `results/weighted_hybrid.json`: weights, intercept, regression MSE, protocol,
+  checkpoint paths, and validation/test metrics.
+- `results/hybrid_coefficients.csv`: one learned coefficient per recommender.
+- `results/weighted_hybrid.csv`: test accuracy metrics.
+- `artifacts/hybrid/WeightedHybrid.npz`: frozen combined scores, coefficients,
+  and user/item token mappings. This local artifact preserves the exact scores,
+  including the Random component, without rerunning base-model inference.
+
+Load the fitted hybrid for existing MovieLens users/items:
+
+```python
+from task1.train_hybrid import load_hybrid
+from recbole.data.interaction import Interaction
+import torch
+
+hybrid = load_hybrid()
+scores = hybrid.full_sort_predict(Interaction({"user_id": torch.tensor([1])}))
+```
+
+The example uses an internal RecBole user ID, not a raw MovieLens ID. The NPZ
+contains `user_tokens` and `item_tokens` to map IDs back to MovieLens. For a
+recommendation list, exclude padding item 0 and the user's observed items before
+sorting. The saved hybrid supports the existing catalog; adding users/items
+requires rebuilding it.
+
+Run the focused regression checks with:
+
+```bash
+python -m unittest discover -s tests
+```

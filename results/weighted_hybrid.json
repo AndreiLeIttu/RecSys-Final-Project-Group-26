@@ -1,0 +1,56 @@
+{
+  "artifact": "artifacts/hybrid/WeightedHybrid.npz",
+  "base_checkpoints": {
+    "BPR": "artifacts/best/BPR.pth",
+    "EASE": "artifacts/best/EASE.pth",
+    "FISM": "artifacts/best/FISM.pth",
+    "ItemKNN": "artifacts/best/ItemKNN.pth",
+    "LightGCN": "artifacts/best/LightGCN.pth",
+    "NGCF": "artifacts/best/NGCF.pth",
+    "NeuMF": "artifacts/best/NeuMF.pth",
+    "Pop": "artifacts/best/Pop.pth",
+    "Random": "artifacts/best/Random.pth",
+    "SLIMElastic": "artifacts/best/SLIMElastic.pth",
+    "UserKNN": "artifacts/best/UserKNN.pth"
+  },
+  "dataset": "ml-100k",
+  "fit_negatives": 47980,
+  "fit_pairs": 57576,
+  "fit_positives": 9596,
+  "intercept": -0.05077111018636046,
+  "model": "WeightedHybrid",
+  "negative_ratio": 5,
+  "normalization": "per-user min-max over nonpadding items unseen in training",
+  "regression": "least squares with intercept, nonnegative weights summing to one",
+  "seed": 2020,
+  "split_signature": "544c4e3e2f389b1c8dc7cba8ae76c580cdb85d34051d920cc059605c5f62a23f",
+  "test_result": {
+    "hit@10": 0.8293,
+    "mrr@10": 0.5323,
+    "ndcg@10": 0.3347,
+    "precision@10": 0.2252,
+    "recall@10": 0.2846
+  },
+  "training_mse": 0.0795951181153058,
+  "user_batch_size": 16,
+  "validation_fit_result": {
+    "hit@10": 0.79,
+    "mrr@10": 0.4245,
+    "ndcg@10": 0.2612,
+    "precision@10": 0.1803,
+    "recall@10": 0.2433
+  },
+  "weights": {
+    "BPR": 2.140758611065069e-17,
+    "EASE": 0.234439496007983,
+    "FISM": 0.0,
+    "ItemKNN": 0.0040661732911647635,
+    "LightGCN": 3.2466357057932872e-18,
+    "NGCF": 0.0,
+    "NeuMF": 0.3699640271173361,
+    "Pop": 0.0,
+    "Random": 0.0,
+    "SLIMElastic": 0.39153030358351626,
+    "UserKNN": 0.0
+  }
+}
