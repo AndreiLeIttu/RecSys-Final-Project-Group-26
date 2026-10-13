@@ -9,5 +9,5 @@ eval_step: 1
 stopping_step: 10
 dataset: ml-100k
 embedding_size: 64
-learning_rate: 0.005
+learning_rate: 0.003
 reg_weight: 1.0e-05

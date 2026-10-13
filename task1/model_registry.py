@@ -13,40 +13,73 @@ class ModelSpec:
     name: str
     recbole_model: str
     config_file: Path
+    family: str
+    role: str = "candidate"
 
 
 def _spec(
     name: str,
+    family: str,
     recbole_model: str | None = None,
+    role: str = "candidate",
 ) -> ModelSpec:
     return ModelSpec(
         name=name,
         recbole_model=recbole_model or name,
         config_file=MODEL_CONFIG_DIR / f"{name}.yaml",
+        family=family,
+        role=role,
     )
 
 
 MODEL_SPECS = {
     spec.name: spec
     for spec in (
-        _spec("Random"),
-        _spec("Pop"),
-        _spec("ItemKNN"),
-        _spec("UserKNN", recbole_model="ItemKNN"),
-        _spec("BPR"),
-        _spec("FISM"),
-        _spec("SLIMElastic"),
-        _spec("EASE"),
-        _spec("NeuMF"),
-        _spec("NGCF"),
-        _spec("LightGCN"),
-        _spec("FeatureCombination"),
+        _spec("Random", "baseline", role="baseline"),
+        _spec("Pop", "baseline", role="baseline"),
+        _spec("ItemKNN", "neighborhood"),
+        _spec("UserKNN", "neighborhood", recbole_model="ItemKNN"),
+        _spec("BPR", "matrix factorization"),
+        _spec("FISM", "latent item similarity", role="supplementary"),
+        _spec("SLIMElastic", "linear item-item"),
+        _spec("EASE", "linear item-item"),
+        _spec("NeuMF", "neural interaction"),
+        _spec("NGCF", "graph", role="supplementary"),
+        _spec("LightGCN", "graph"),
+        _spec("FeatureCombination", "hybrid", role="hybrid"),
     )
 }
 
+PRIMARY_MODEL_NAMES = (
+    "Random",
+    "Pop",
+    "ItemKNN",
+    "UserKNN",
+    "BPR",
+    "SLIMElastic",
+    "EASE",
+    "NeuMF",
+    "LightGCN",
+)
+
+INDIVIDUAL_MODEL_NAMES = (
+    "Random",
+    "Pop",
+    "ItemKNN",
+    "UserKNN",
+    "BPR",
+    "FISM",
+    "SLIMElastic",
+    "EASE",
+    "NeuMF",
+    "NGCF",
+    "LightGCN",
+)
+
+
 def resolve_models(names: list[str] | None) -> list[ModelSpec]:
     if not names:
-        return list(MODEL_SPECS.values())
+        return [MODEL_SPECS[name] for name in PRIMARY_MODEL_NAMES]
 
     unknown = sorted(set(names) - set(MODEL_SPECS))
     if unknown:

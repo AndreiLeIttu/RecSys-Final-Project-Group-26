@@ -40,7 +40,7 @@ def write_csv(path: Path, rows: Iterable[dict[str, Any]]) -> None:
                 fields.append(key)
 
     with path.open("w", newline="", encoding="utf-8") as output:
-        writer = csv.DictWriter(output, fieldnames=fields)
+        writer = csv.DictWriter(output, fieldnames=fields, lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 

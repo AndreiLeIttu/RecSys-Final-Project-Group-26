@@ -42,27 +42,43 @@ For an existing clone, initialize or update the pinned submodule with:
 git submodule update --init --recursive
 ```
 
+Regenerate the corrected seeded split from the repository root:
+
+```powershell
+python third_party/RecBole_DSAIT4335/save_split.py --model BPR --dataset ml-100k --config_files "task1/configs/common.yaml task1/configs/export_split.yaml" --output_dir saved/splits
+```
+
 ## Project Layout
 
 - `task1/`: individual recommender models, tuning, and later hybrid models.
 
 ## Task 1.1 and 1.2
 
-The implemented RecBole models are `Random`, `Pop`, `ItemKNN`, `UserKNN`,
-`BPR`, `FISM`, `SLIMElastic`, `EASE`, `NeuMF`, `NGCF`, and `LightGCN`.
-`UserKNN` uses RecBole's `ItemKNN` implementation in user-based mode.
+The primary comparison uses nine models: `Random` and `Pop` as naive
+baselines; `ItemKNN` and `UserKNN` as neighborhood methods; `BPR` for matrix
+factorization; `EASE` and `SLIMElastic` as dense and sparse linear item models;
+`NeuMF` as a neural interaction model; and `LightGCN` as a graph model.
+`UserKNN` uses RecBole's `ItemKNN` implementation in user-based mode. The
+initial screen also includes `FISM` and `NGCF`, which remain reproducible as
+supplementary experiments.
 
-All models use MovieLens 100K with seed 2020, an 80/10/10 random-order
+The tuning run uses MovieLens 100K with seed 2020, an 80/10/10 random-order
 user-grouped split, and full-ranking evaluation over unseen items. Models are
 selected by validation MRR@10 and evaluated with Precision, Recall, nDCG, MRR,
 and Hit@10. Neural models train for at most 20 epochs with per-epoch validation
 and early stopping; only the selected validation winner is evaluated on the
 test set. All observed interactions are treated as positive.
 
-Run all 50 configured trials (47 individual-model trials and 3 hybrid trials):
+Run the 49 coarse and focused validation trials for the nine primary models:
 
 ```powershell
 python -m task1.tune_models
+```
+
+Run the 12 supplementary trials explicitly:
+
+```powershell
+python -m task1.tune_models --models FISM NGCF
 ```
 
 Run selected models:
@@ -79,11 +95,22 @@ python -m task1.tune_models --models Random Pop --max-trials 1
 
 Completed trials are reused when the command is run again.
 
+After selecting each configuration on seed-2020 validation MRR@10, estimate
+robustness across three seeds without retuning on test results. Each seed changes
+the random user-grouped split and, where applicable, stochastic model training:
+
+```powershell
+python -m task1.evaluate_seeds --seeds 2020 2021 2022
+```
+
 The pipeline writes:
 
 - `results/tuning_trials.csv`: every completed tuning trial.
 - `results/best_models.csv` and `results/best_models.json`: selected settings
   and test results.
+- `results/seed_results.csv` and `.json`: each fixed-configuration seed run.
+- `results/model_summary.csv` and `.json`: report-ready test mean and sample
+  standard deviation across seeds.
 - `task1/configs/best/`: generated configuration for each selected model.
 - `artifacts/best/`: selected checkpoints (stored locally and not committed).
 
@@ -147,10 +174,12 @@ Run after setup, from the repository root:
 python -m task1.train_hybrid
 ```
 
-This combines all eleven individual recommenders. It reuses local checkpoints
+This combines all eleven individual recommenders, including the two
+supplementary models. It reuses local checkpoints
 in `artifacts/best/`. Since checkpoints are not committed, missing ones are
 automatically trained using the selected parameters in `results/best_models.json`
-and the model configurations. You do not need to repeat the 47-trial search.
+and the model configurations. You do not need to repeat the 61 completed trials
+(49 primary and 12 supplementary).
 The existing Task 1.2 result files are preserved. Training all missing models can
 take several minutes on CPU.
 

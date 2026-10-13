@@ -11,7 +11,7 @@ import torch
 
 from task1.experiment import load_data_and_model, resolve_project_path, train_model
 from task1.io_utils import write_csv, write_json
-from task1.model_registry import PROJECT_ROOT, resolve_models
+from task1.model_registry import INDIVIDUAL_MODEL_NAMES, PROJECT_ROOT, resolve_models
 from task1.weighted_hybrid import fit_weights, normalize_scores, regression_pairs
 
 from recbole.data.interaction import Interaction
@@ -96,7 +96,7 @@ def main() -> None:
     args = parser.parse_args()
     if args.negative_ratio < 1 or args.user_batch_size < 1:
         parser.error("negative-ratio and user-batch-size must be positive")
-    specs = resolve_models(args.models)
+    specs = resolve_models(args.models or list(INDIVIDUAL_MODEL_NAMES))
     if len(specs) < 2 or len({spec.name for spec in specs}) != len(specs):
         parser.error("Choose at least two distinct recommenders")
     selected_path = PROJECT_ROOT / "results" / "best_models.json"

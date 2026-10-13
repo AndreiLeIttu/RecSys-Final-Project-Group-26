@@ -1,60 +1,60 @@
 {
   "BPR": {
     "best_valid_result": {
-      "hit@10": 0.737,
-      "mrr@10": 0.375,
-      "ndcg@10": 0.2233,
-      "precision@10": 0.1552,
-      "recall@10": 0.2027
+      "hit@10": 0.7359,
+      "mrr@10": 0.3777,
+      "ndcg@10": 0.2228,
+      "precision@10": 0.1545,
+      "recall@10": 0.2055
     },
-    "best_valid_score": 0.375,
-    "candidate_key": "24e2db8f1b9d533a",
+    "best_valid_score": 0.3777,
+    "candidate_key": "4dc6043e90fef288",
     "checkpoint": "artifacts/best/BPR.pth",
     "device": "cpu",
-    "duration_seconds": 13.209328199998708,
+    "duration_seconds": 3.932338700047694,
     "model": "BPR",
     "parameters": {
       "embedding_size": 64,
-      "learning_rate": 0.005,
+      "learning_rate": 0.003,
       "reg_weight": 1e-05
     },
     "recbole_model": "BPR",
     "seed": 2020,
     "status": "ok",
     "test_result": {
-      "hit@10": 0.7731,
-      "mrr@10": 0.4565,
-      "ndcg@10": 0.277,
-      "precision@10": 0.1897,
-      "recall@10": 0.2347
+      "hit@10": 0.7943,
+      "mrr@10": 0.4765,
+      "ndcg@10": 0.2858,
+      "precision@10": 0.1924,
+      "recall@10": 0.2433
     }
   },
   "EASE": {
     "best_valid_result": {
       "hit@10": 0.7847,
-      "mrr@10": 0.4201,
-      "ndcg@10": 0.2563,
-      "precision@10": 0.1755,
-      "recall@10": 0.2389
+      "mrr@10": 0.4202,
+      "ndcg@10": 0.2567,
+      "precision@10": 0.1758,
+      "recall@10": 0.2381
     },
-    "best_valid_score": 0.4201,
-    "candidate_key": "b51038f1afc94cc3",
+    "best_valid_score": 0.4202,
+    "candidate_key": "53331572ed9042ed",
     "checkpoint": "artifacts/best/EASE.pth",
     "device": "cpu",
-    "duration_seconds": 1.7164464000015869,
+    "duration_seconds": 0.8573397000436671,
     "model": "EASE",
     "parameters": {
-      "reg_weight": 250.0
+      "reg_weight": 350.0
     },
     "recbole_model": "EASE",
     "seed": 2020,
     "status": "ok",
     "test_result": {
-      "hit@10": 0.8197,
-      "mrr@10": 0.5277,
-      "ndcg@10": 0.3295,
-      "precision@10": 0.2206,
-      "recall@10": 0.2805
+      "hit@10": 0.8229,
+      "mrr@10": 0.531,
+      "ndcg@10": 0.3308,
+      "precision@10": 0.2211,
+      "recall@10": 0.2791
     }
   },
   "FISM": {
@@ -92,61 +92,61 @@
   },
   "ItemKNN": {
     "best_valid_result": {
-      "hit@10": 0.7328,
-      "mrr@10": 0.3779,
-      "ndcg@10": 0.2213,
-      "precision@10": 0.1554,
-      "recall@10": 0.2058
+      "hit@10": 0.719,
+      "mrr@10": 0.3795,
+      "ndcg@10": 0.2215,
+      "precision@10": 0.155,
+      "recall@10": 0.1996
     },
-    "best_valid_score": 0.3779,
-    "candidate_key": "c4987e0fb27df611",
+    "best_valid_score": 0.3795,
+    "candidate_key": "5b556db4fc841aca",
     "checkpoint": "artifacts/best/ItemKNN.pth",
     "device": "cpu",
-    "duration_seconds": 2.269633399999293,
+    "duration_seconds": 1.9845802999916486,
     "model": "ItemKNN",
     "parameters": {
-      "k": 100
+      "k": 75
     },
     "recbole_model": "ItemKNN",
     "seed": 2020,
     "status": "ok",
     "test_result": {
-      "hit@10": 0.7847,
-      "mrr@10": 0.4623,
-      "ndcg@10": 0.2834,
-      "precision@10": 0.1931,
-      "recall@10": 0.247
+      "hit@10": 0.7815,
+      "mrr@10": 0.4675,
+      "ndcg@10": 0.2817,
+      "precision@10": 0.1922,
+      "recall@10": 0.2426
     }
   },
   "LightGCN": {
     "best_valid_result": {
-      "hit@10": 0.6755,
-      "mrr@10": 0.3248,
-      "ndcg@10": 0.194,
-      "precision@10": 0.1369,
-      "recall@10": 0.1781
+      "hit@10": 0.7031,
+      "mrr@10": 0.3428,
+      "ndcg@10": 0.2062,
+      "precision@10": 0.1454,
+      "recall@10": 0.1903
     },
-    "best_valid_score": 0.3248,
-    "candidate_key": "055d2fa6755661ea",
+    "best_valid_score": 0.3428,
+    "candidate_key": "d0eea51cb93b0aed",
     "checkpoint": "artifacts/best/LightGCN.pth",
     "device": "cpu",
-    "duration_seconds": 68.57588240000041,
+    "duration_seconds": 20.248618400015403,
     "model": "LightGCN",
     "parameters": {
       "embedding_size": 64,
       "learning_rate": 0.005,
-      "n_layers": 3,
+      "n_layers": 2,
       "reg_weight": 1e-05
     },
     "recbole_model": "LightGCN",
     "seed": 2020,
     "status": "ok",
     "test_result": {
-      "hit@10": 0.7073,
-      "mrr@10": 0.4101,
-      "ndcg@10": 0.239,
-      "precision@10": 0.1604,
-      "recall@10": 0.2001
+      "hit@10": 0.737,
+      "mrr@10": 0.4352,
+      "ndcg@10": 0.2568,
+      "precision@10": 0.1704,
+      "recall@10": 0.219
     }
   },
   "NGCF": {
