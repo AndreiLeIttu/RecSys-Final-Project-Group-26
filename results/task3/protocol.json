@@ -1,0 +1,192 @@
+{
+  "candidate_order": "descending score, ties by ascending internal item ID",
+  "candidates": 100,
+  "code_sha256": {
+    "task3/__init__.py": "3a129320da635b8e302e659ace37a08d43fe14d204cfabeb484cdfb60c7445e4",
+    "task3/evaluate.py": "15000d26b6f41a1a61f3d5861c6c4215c719bc780141765450593160b6931e58",
+    "task3/metrics.py": "229fffdc7bd2de9deb3d24355653be30c529e9f3a543a6433f558a4ed8037888",
+    "task3/plot_results.py": "d5d7b8689e92c170688b6ff648ca623e6f580c9607590b49f4960f275221f056",
+    "task3/prepare.py": "a715364cc1f742a3f0f87d5e28a4cdcd4f10c060fd439209526bbb9ffa69cd24",
+    "task3/rerankers.py": "5f7392daa9024b13afc73e10e75565f4ae924f11b2db744887b852bba20d2b8d"
+  },
+  "components": {
+    "BPR": {
+      "checkpoint": "artifacts/task3/checkpoints/BPR.pth",
+      "checkpoint_sha256": "d195b5763b8bb0e21bab1ddecc15b3fb35a623d6704aaf16623677f96af579fa",
+      "parameters": {
+        "embedding_size": 64,
+        "learning_rate": 0.003,
+        "reg_weight": 1e-05
+      },
+      "score_sha256": "67d4289420f40179c859ca4b09f117459119806d95cdd99e70a6e6b69c8dd203"
+    },
+    "EASE": {
+      "checkpoint": "artifacts/task3/checkpoints/EASE.pth",
+      "checkpoint_sha256": "974aeafc7d0751b4847e2cdbec81785207585df13538ae88c0218de11bdc692d",
+      "parameters": {
+        "reg_weight": 350.0
+      },
+      "score_sha256": "8db7c05451a8e7f0e39f24bfebc4c49f18a60e0127d2f47f763039c628ccdfa8"
+    },
+    "FISM": {
+      "checkpoint": "artifacts/best/FISM.pth",
+      "checkpoint_sha256": "4952fc1891aea98b9ca862c7a3f8247959bec54294df96c2e65a79868252dff1",
+      "parameters": {
+        "alpha": 0.0,
+        "embedding_size": 64,
+        "reg_weights": [
+          0.001,
+          0.001
+        ]
+      },
+      "score_sha256": "b0854644d382f63e576debee1118341a2e49d8743fc2d74f58998a6bd2dc9bf1"
+    },
+    "ItemKNN": {
+      "checkpoint": "artifacts/task3/checkpoints/ItemKNN.pth",
+      "checkpoint_sha256": "96ecf2ec01f6f9289c101ae0c0c3ce86efcee78e02338a4559b92b0ae6fda480",
+      "parameters": {
+        "k": 75
+      },
+      "score_sha256": "d14122df3169c61eeac32290ae263c05d253856c5b767f11b6bb22068570a82c"
+    },
+    "LightGCN": {
+      "checkpoint": "artifacts/task3/checkpoints/LightGCN.pth",
+      "checkpoint_sha256": "02a63a8bc50a484bc899dfaa0bd4558e2bb993ad5924994d122464fd6f89320e",
+      "parameters": {
+        "embedding_size": 64,
+        "learning_rate": 0.005,
+        "n_layers": 2,
+        "reg_weight": 1e-05
+      },
+      "score_sha256": "46a3d5bbaaf3ca6e9161feac4849300439989a06f69f0b944497ad61b6899440"
+    },
+    "NGCF": {
+      "checkpoint": "artifacts/best/NGCF.pth",
+      "checkpoint_sha256": "8e40a16002a8aadf40a477da0e4bbca6f4bb81fa602096b105f699a48fd4b38e",
+      "parameters": {
+        "embedding_size": 64,
+        "hidden_size_list": [
+          64,
+          64
+        ],
+        "message_dropout": 0.1,
+        "node_dropout": 0.0,
+        "reg_weight": 1e-05
+      },
+      "score_sha256": "f02a53a41dfce9c37115dfd1c3d41b23bf4d7bf6b9c95ee4b2c4a8ff1986e432"
+    },
+    "NeuMF": {
+      "checkpoint": "artifacts/best/NeuMF.pth",
+      "checkpoint_sha256": "17d8f88a1af0c8f81b416662cd87389e2225e4c47275158bf46e564eca838238",
+      "parameters": {
+        "dropout_prob": 0.1,
+        "learning_rate": 0.001,
+        "mf_embedding_size": 64,
+        "mlp_embedding_size": 64,
+        "mlp_hidden_size": [
+          128,
+          64
+        ]
+      },
+      "score_sha256": "b5e7151b8e7ca724d6999efc3747bbc82cfec00cb3660eb1bc3cd3c89e1881a7"
+    },
+    "Pop": {
+      "checkpoint": "artifacts/best/Pop.pth",
+      "checkpoint_sha256": "86aa2d8a034199e290381e1b804015b6552519c64b1b80ecca13bb696c957f84",
+      "parameters": {},
+      "score_sha256": "036dbe75d8d4f29484e28942bbcd42aa5fc613cbb27e2f15f93998cbeaab3c94"
+    },
+    "Random": {
+      "checkpoint": "artifacts/best/Random.pth",
+      "checkpoint_sha256": "412b5a0d580f8cbb348f964eaea85dba0ca34a8cbccdcd4f9a7aaf76226c18b4",
+      "parameters": {},
+      "score_sha256": "a1b136787095e46276a1e56e2ba770824fd2b69e962cf035c14060f6acc3c513"
+    },
+    "SLIMElastic": {
+      "checkpoint": "artifacts/best/SLIMElastic.pth",
+      "checkpoint_sha256": "6d4ddd17fcb6f674f601facf761fc7393c820b76db0ad63fe402ed14ec687b98",
+      "parameters": {
+        "alpha": 0.2,
+        "l1_ratio": 0.01
+      },
+      "score_sha256": "c5ea802541976eefb3b626391f5942bc0c5c22bafc801924d88d7c5ad61efc8f"
+    },
+    "UserKNN": {
+      "checkpoint": "artifacts/best/UserKNN.pth",
+      "checkpoint_sha256": "1a948808a582b0847477518b769c1f95d12488092b60e159081c59bc913b2bc2",
+      "parameters": {
+        "k": 50
+      },
+      "score_sha256": "0f90378eb760563c6c1ca73870fe91e9b4ad20aeb88735e829da4116745c8a29"
+    }
+  },
+  "fairness": "User fairness targets popularity preference, not equal accuracy; item fairness targets catalog-proportional head/tail exposure, not demographic or merit-based fairness",
+  "history_mask": "train for validation; train plus all validation interactions for test",
+  "hybrid": {
+    "fit_pairs": 28116,
+    "intercept": -0.048204557948375276,
+    "negative_ratio": 5,
+    "training_mse": 0.07901551807127585,
+    "weights": {
+      "BPR": 0.0,
+      "EASE": 0.2301675118308946,
+      "FISM": 0.0,
+      "ItemKNN": 0.06635515304843491,
+      "LightGCN": 1.4222556223260933e-17,
+      "NGCF": 9.842377177603195e-18,
+      "NeuMF": 0.3503917294883475,
+      "Pop": 7.488430784857556e-18,
+      "Random": 0.0,
+      "SLIMElastic": 0.35308560563232305,
+      "UserKNN": 0.0
+    }
+  },
+  "hybrid_fit_users": 471,
+  "item_fairness_target": [
+    0.20035671819262782,
+    0.7996432818073722
+  ],
+  "limitation": "Base hyperparameters and early stopping used the original full validation split. The reranker tuning scores are development results, not independent estimates. No test labels are used for fitting or selection.",
+  "max_relative_validation_ndcg_loss": 0.05,
+  "metrics": {
+    "ActivityGRU": "absolute gap in mean NDCG between <= training median activity and > median activity",
+    "ExposureGap": "total variation of aggregate discounted head/tail exposure and catalog proportions",
+    "ExposureGini": "Gini of item exposure, including never-recommended items; lower is better",
+    "Miscalibration": "KL(p || 0.99*q + 0.01*p), natural log, uniform list weights; lower is better",
+    "UPD": "total variation of training-history and recommended head/tail distributions; lower is better"
+  },
+  "models": [
+    "EASE",
+    "WeightedHybrid",
+    "Random",
+    "Pop"
+  ],
+  "packages": {
+    "numpy": "1.26.4",
+    "pandas": "2.2.3",
+    "recbole": "1.2.1",
+    "scipy": "1.17.1",
+    "torch": "2.14.1"
+  },
+  "popularity_groups": "head = top ceil(20% of catalog) by training count; remaining items = tail",
+  "profiles": "training interactions only; equal weight per interaction, fractional genres per item",
+  "python": "3.11.16",
+  "reranker_tune_users": 472,
+  "score_batch_size": 16,
+  "score_scaling": "per-user candidate min-max; mean relevance in greedy list objective",
+  "seed": 2020,
+  "selection": "Best method-specific validation objective within NDCG budget; ties prefer smaller strength",
+  "split_signature": "544c4e3e2f389b1c8dc7cba8ae76c580cdb85d34051d920cc059605c5f62a23f",
+  "status": "complete",
+  "strengths": [
+    0.0,
+    0.1,
+    0.25,
+    0.5,
+    0.75,
+    1
+  ],
+  "test_users": 943,
+  "topk": 10,
+  "validation_user_split": "seeded permutation, first half fits hybrid, second half tunes rerankers"
+}

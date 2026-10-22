@@ -23,11 +23,12 @@ def rank_scores(scores: np.ndarray, seen_items: np.ndarray, k: int) -> np.ndarra
     if not np.isfinite(scores).all():
         raise ValueError("scores must be finite")
 
-    score_tensor = torch.as_tensor(scores, dtype=torch.float64)
+    # as_tensor can share NumPy's memory; masking must not change the input.
+    score_tensor = torch.as_tensor(scores.copy(), dtype=torch.float64)
     seen_tensor = torch.as_tensor(seen_items, dtype=torch.bool)
     score_tensor.masked_fill_(seen_tensor, -torch.inf)
     score_tensor[:, 0] = -torch.inf
-    values, items = torch.topk(score_tensor, k, dim=-1)
+    values, items = torch.topk(score_tensor, min(k, scores.shape[1]), dim=-1)
     rankings = np.full((scores.shape[0], k), -1, dtype=np.int64)
     item_rows = items.numpy()
     valid_rows = torch.isfinite(values).numpy()

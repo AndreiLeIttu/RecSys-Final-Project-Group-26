@@ -81,7 +81,13 @@ class IndependentMetricTests(unittest.TestCase):
     def test_rank_scores_masks_padding_and_history(self):
         scores = np.array([[10, 0, 3, 3, 1]], dtype=float)
         seen = np.array([[0, 1, 0, 0, 0]], dtype=bool)
-        np.testing.assert_array_equal(rank_scores(scores, seen, 4), [[3, 2, 4, -1]])
+        original = scores.copy()
+        ranked = rank_scores(scores, seen, 4)[0]
+        # Equal scores have no guaranteed order across PyTorch platforms.
+        self.assertEqual(set(ranked[:2]), {2, 3})
+        np.testing.assert_array_equal(ranked[2:], [4, -1])
+        np.testing.assert_array_equal(scores, original)
+        np.testing.assert_array_equal(rank_scores(scores, seen, 6)[0, 3:], [-1, -1, -1])
 
 
 if __name__ == "__main__":

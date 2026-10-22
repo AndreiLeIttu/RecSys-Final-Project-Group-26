@@ -1,0 +1,82 @@
+[
+  {
+    "method": "diversity",
+    "model": "EASE",
+    "strength": 0.25
+  },
+  {
+    "method": "calibration",
+    "model": "EASE",
+    "strength": 0.1
+  },
+  {
+    "method": "user_fairness",
+    "model": "EASE",
+    "strength": 0.25
+  },
+  {
+    "method": "item_fairness",
+    "model": "EASE",
+    "strength": 0.25
+  },
+  {
+    "method": "diversity",
+    "model": "WeightedHybrid",
+    "strength": 0.25
+  },
+  {
+    "method": "calibration",
+    "model": "WeightedHybrid",
+    "strength": 0.1
+  },
+  {
+    "method": "user_fairness",
+    "model": "WeightedHybrid",
+    "strength": 0.25
+  },
+  {
+    "method": "item_fairness",
+    "model": "WeightedHybrid",
+    "strength": 0.25
+  },
+  {
+    "method": "diversity",
+    "model": "Random",
+    "strength": 0.5
+  },
+  {
+    "method": "calibration",
+    "model": "Random",
+    "strength": 1
+  },
+  {
+    "method": "user_fairness",
+    "model": "Random",
+    "strength": 1
+  },
+  {
+    "method": "item_fairness",
+    "model": "Random",
+    "strength": 0.5
+  },
+  {
+    "method": "diversity",
+    "model": "Pop",
+    "strength": 0.5
+  },
+  {
+    "method": "calibration",
+    "model": "Pop",
+    "strength": 0.5
+  },
+  {
+    "method": "user_fairness",
+    "model": "Pop",
+    "strength": 0.5
+  },
+  {
+    "method": "item_fairness",
+    "model": "Pop",
+    "strength": 0.75
+  }
+]

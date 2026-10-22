@@ -264,3 +264,28 @@ Run the Task 2 metric tests with:
 ```bash
 python -m unittest discover -s tests -p 'test_task2_metrics.py'
 ```
+
+## Task 3.1 and 3.2: Reranking
+
+We rerank a model's top 100 candidates into a final top 10. The four methods aim
+for genre diversity, genre calibration, user popularity preferences, and item exposure.
+We reuse Task 2's metrics and add calibration and fairness measures.
+
+```bash
+python -m task3.evaluate
+python -m task3.plot_results
+```
+
+The default experiment uses EASE, WeightedHybrid, Random, and Pop. Missing or
+outdated checkpoints are trained with the selected Task 1 settings and saved
+separately under `artifacts/task3/`. The first run can take a few minutes.
+
+For a smaller run:
+
+```bash
+python -m task3.evaluate --models EASE --output-dir results/task3-ease
+python -m task3.plot_results --directory results/task3-ease --models EASE
+```
+
+See [the method and evaluation notes](task3/README.md) and
+[the results discussion](results/task3/discussion.md).
