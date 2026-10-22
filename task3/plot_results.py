@@ -44,6 +44,6 @@ def plot(directory, models):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--directory", type=Path, default=PROJECT_ROOT / "results/task3")
-    parser.add_argument("--models", nargs="+", default=["EASE", "WeightedHybrid"])
+    parser.add_argument("--models", nargs="+", default=["EASE", "FeatureCombination", "TunedWeightedHybrid", "SwitchingHybrid"])
     args = parser.parse_args()
     plot(args.directory, args.models)

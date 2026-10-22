@@ -12,13 +12,15 @@ from typing import Any
 import numpy as np
 
 from task1.experiment import load_data_and_model, resolve_project_path, train_model
+from task1.io_utils import write_csv, write_json
 from task1.model_registry import MODEL_SPECS, PROJECT_ROOT
 from task1.train_hybrid import dataset_signature, load_hybrid
 from task2.metrics import accuracy_metrics, beyond_accuracy_metrics
 from task2.recommendations import collect_test_rankings, rank_score_matrix, rankings_for_users
 
 
-DEFAULT_MODELS = [*MODEL_SPECS, "WeightedHybrid"]
+SCORE_HYBRIDS = ("WeightedHybrid", "TunedWeightedHybrid", "SwitchingHybrid")
+DEFAULT_MODELS = [*MODEL_SPECS, *SCORE_HYBRIDS]
 CACHE_VERSION = "2"
 
 
@@ -168,10 +170,12 @@ def _hybrid_scores(
     reference_signature: str,
     scores_file: Path,
 ) -> np.ndarray:
-    hybrid_result = _read_json(PROJECT_ROOT / "results" / "weighted_hybrid.json")
-    if hybrid_result.get("split_signature") != reference_signature:
-        raise ValueError("WeightedHybrid split signature does not match Task 1 data")
     with np.load(scores_file, allow_pickle=False) as artifact:
+        signature = (str(artifact["split_signature"].item())
+                     if "split_signature" in artifact else
+                     _read_json(PROJECT_ROOT / "results/weighted_hybrid.json").get("split_signature"))
+        if signature != reference_signature:
+            raise ValueError("Hybrid split signature does not match Task 1 data")
         expected_users = np.asarray(
             dataset.field2id_token[dataset.uid_field], dtype=str,
         )
@@ -184,14 +188,6 @@ def _hybrid_scores(
         ):
             raise ValueError("WeightedHybrid token mappings do not match Task 1 data")
     return load_hybrid(scores_file).scores.detach().cpu().numpy()
-
-
-def _write_csv(path: Path, rows: list[dict[str, Any]], fields: list[str]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8", newline="") as output:
-        writer = csv.DictWriter(output, fieldnames=fields, extrasaction="ignore")
-        writer.writeheader()
-        writer.writerows(rows)
 
 
 def evaluate_models(
@@ -226,8 +222,9 @@ def evaluate_models(
         model = None
         fingerprint: str
         try:
-            if name == "WeightedHybrid":
-                score_path = PROJECT_ROOT / "artifacts" / "hybrid" / "WeightedHybrid.npz"
+            if name in SCORE_HYBRIDS:
+                directory = "artifacts/hybrid" if name == "WeightedHybrid" else "artifacts/hybrid/seed2020"
+                score_path = PROJECT_ROOT / directory / f"{name}.npz"
                 if not score_path.exists():
                     skipped.append(f"{name}: artifact is missing")
                     continue
@@ -245,7 +242,7 @@ def evaluate_models(
             cache_path = cache_dir / f"{name}-top{topk}.npz"
             rankings = _load_cached_rankings(cache_path, signature, fingerprint, topk)
             if rankings is None:
-                if name == "WeightedHybrid":
+                if name in SCORE_HYBRIDS:
                     scores = _hybrid_scores(dataset, signature, score_path)
                     rankings = rank_score_matrix(scores, test_data, dataset, topk)
                 else:
@@ -282,17 +279,15 @@ def evaluate_models(
         raise RuntimeError("No models were evaluated. " + "; ".join(skipped))
 
     output_dir = PROJECT_ROOT / "results" / "task2"
-    accuracy_fields = ["model", *[f"{metric}@{topk}" for metric in (
-        "Precision", "Recall", "NDCG", "MRR", "Hit",
-    )]]
-    beyond_fields = [f"Coverage@{topk}", f"IntraListDiversity@{topk}",
-                     f"Novelty@{topk}", f"AveragePopularity@{topk}"]
-    all_fields = [*accuracy_fields, *beyond_fields]
-    _write_csv(output_dir / "all_metrics.csv", results, all_fields)
+    write_csv(output_dir / "all_metrics.csv", results)
     summary = {
         "protocol": "MovieLens 100K, seed 2020, user-grouped random-order 80/10/10 split",
         "evaluation_split": "test",
         "topk": topk,
+        "evaluated_user_count": int(len(user_ids)),
+        "catalog_size": int(dataset.item_num - 1),
+        "interaction_counts": dict(zip(("train", "validation", "test"),
+                                       [int(matrix.sum()) for matrix in matrices])),
         "selected_models": requested,
         "evaluated_models": [row["model"] for row in results],
         "skipped_models": skipped,
@@ -306,6 +301,7 @@ def evaluate_models(
             "AveragePopularity": "mean raw training interaction count per recommended item",
         },
     }
+    write_json(output_dir / "evaluation_summary.json", summary)
     print(json.dumps(summary, indent=2))
     return summary
 

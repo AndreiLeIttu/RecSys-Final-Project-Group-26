@@ -3,10 +3,10 @@
   "candidates": 100,
   "code_sha256": {
     "task3/__init__.py": "3a129320da635b8e302e659ace37a08d43fe14d204cfabeb484cdfb60c7445e4",
-    "task3/evaluate.py": "15000d26b6f41a1a61f3d5861c6c4215c719bc780141765450593160b6931e58",
+    "task3/evaluate.py": "f28b61f7980cccd44c4ba424d495dcc852c4d24b1c3c0b49cd6588629707c3c0",
     "task3/metrics.py": "229fffdc7bd2de9deb3d24355653be30c529e9f3a543a6433f558a4ed8037888",
-    "task3/plot_results.py": "d5d7b8689e92c170688b6ff648ca623e6f580c9607590b49f4960f275221f056",
-    "task3/prepare.py": "a715364cc1f742a3f0f87d5e28a4cdcd4f10c060fd439209526bbb9ffa69cd24",
+    "task3/plot_results.py": "31a59595caaca699e03929af5fb580ac0edf990de873f1867db5270e081125e7",
+    "task3/prepare.py": "005837439b58bcb669ad099bddaa09b0b77c722800ee73e5450c0342dcf6bedf",
     "task3/rerankers.py": "5f7392daa9024b13afc73e10e75565f4ae924f11b2db744887b852bba20d2b8d"
   },
   "components": {
@@ -40,6 +40,16 @@
         ]
       },
       "score_sha256": "b0854644d382f63e576debee1118341a2e49d8743fc2d74f58998a6bd2dc9bf1"
+    },
+    "FeatureCombination": {
+      "checkpoint": "artifacts/task3/checkpoints/FeatureCombination.pth",
+      "checkpoint_sha256": "4a2a4d2beb27d9a58af2530c3fe260b2b963d7c789a62169a59c9aecb842862e",
+      "parameters": {
+        "hidden_size": 64,
+        "learning_rate": 0.003,
+        "reg_weight": 0.0001
+      },
+      "score_sha256": "46af63abec6a4a8e25012e077008f9fab639a2e9f69349b8c82f2118059d6d97"
     },
     "ItemKNN": {
       "checkpoint": "artifacts/task3/checkpoints/ItemKNN.pth",
@@ -142,11 +152,47 @@
     }
   },
   "hybrid_fit_users": 471,
+  "hybrids": {
+    "SwitchingHybrid": {
+      "endpoint": "SLIMElastic"
+    },
+    "TunedWeightedHybrid": {
+      "fit_pairs": 51546,
+      "intercept": -0.07170327537855162,
+      "negative_ratio": 10,
+      "training_mse": 0.054987744727688165,
+      "weights": {
+        "EASE": 0.4041871265013121,
+        "ItemKNN": 1.734723475976807e-18,
+        "NeuMF": 0.08801661810118222,
+        "SLIMElastic": 0.5077962553975057
+      }
+    },
+    "WeightedHybrid": {
+      "fit_pairs": 28116,
+      "intercept": -0.048204557948375276,
+      "negative_ratio": 5,
+      "training_mse": 0.07901551807127585,
+      "weights": {
+        "BPR": 0.0,
+        "EASE": 0.2301675118308946,
+        "FISM": 0.0,
+        "ItemKNN": 0.06635515304843491,
+        "LightGCN": 1.4222556223260933e-17,
+        "NGCF": 9.842377177603195e-18,
+        "NeuMF": 0.3503917294883475,
+        "Pop": 7.488430784857556e-18,
+        "Random": 0.0,
+        "SLIMElastic": 0.35308560563232305,
+        "UserKNN": 0.0
+      }
+    }
+  },
   "item_fairness_target": [
     0.20035671819262782,
     0.7996432818073722
   ],
-  "limitation": "Base hyperparameters and early stopping used the original full validation split. The reranker tuning scores are development results, not independent estimates. No test labels are used for fitting or selection.",
+  "limitation": "Base hyperparameters, early stopping and Task 1 hybrid structure/ratio/switch selection used the original full validation split. The reranker tuning scores are development results, not independent estimates. No test labels are used for fitting or selection.",
   "max_relative_validation_ndcg_loss": 0.05,
   "metrics": {
     "ActivityGRU": "absolute gap in mean NDCG between <= training median activity and > median activity",
@@ -158,6 +204,9 @@
   "models": [
     "EASE",
     "WeightedHybrid",
+    "FeatureCombination",
+    "TunedWeightedHybrid",
+    "SwitchingHybrid",
     "Random",
     "Pop"
   ],
@@ -171,6 +220,7 @@
   "popularity_groups": "head = top ceil(20% of catalog) by training count; remaining items = tail",
   "profiles": "training interactions only; equal weight per interaction, fractional genres per item",
   "python": "3.11.16",
+  "recbole_commit": "7aa0ec90ebf51346a0b81dee9198a8279cadccf2",
   "reranker_tune_users": 472,
   "score_batch_size": 16,
   "score_scaling": "per-user candidate min-max; mean relevance in greedy list objective",
@@ -186,6 +236,22 @@
     0.75,
     1
   ],
+  "task1_hybrid_selection": {
+    "limitation": "Base hyperparameters/early stopping already use validation; this is not fully nested validation.",
+    "negative_ratio": 10,
+    "protocol": "Weighted: 3-fold validation-user cross-fit; others: validation MRR@10. Test never selects settings.",
+    "switching": {
+      "endpoint": "SLIMElastic",
+      "kind": "switching",
+      "validation_mrr@10": 0.4224612432459728
+    },
+    "weighted_models": [
+      "SLIMElastic",
+      "EASE",
+      "NeuMF",
+      "ItemKNN"
+    ]
+  },
   "test_users": 943,
   "topk": 10,
   "validation_user_split": "seeded permutation, first half fits hybrid, second half tunes rerankers"

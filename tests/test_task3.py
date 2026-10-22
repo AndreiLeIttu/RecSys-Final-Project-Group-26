@@ -7,7 +7,7 @@ import numpy as np
 
 from task3.evaluate import run, select_setting
 from task3.metrics import evaluate_lists, gini
-from task3.prepare import validation_users
+from task3.prepare import fit_hybrid, validation_users
 from task3.rerankers import (
     METHODS, build_profiles, candidates, miscalibration, popularity_deviation, rerank,
 )
@@ -89,6 +89,38 @@ class RerankingTests(unittest.TestCase):
                 {"strength": 1., "NDCG@10": .3, "UPD@10": .1}]
         self.assertEqual(select_setting(rows, "user_fairness", 10, .05)["strength"], .5)
         self.assertEqual(select_setting(rows, "user_fairness", 10, 0)["strength"], 0)
+
+    def test_hybrid_refit_ignores_reranker_tuning_labels(self):
+        train = np.zeros((5, 8), dtype=bool)
+        train[1:, 1] = True
+        valid = np.zeros_like(train)
+        valid[1:3, 2] = True
+        valid[3:, 3] = True
+        scores = {name: np.random.default_rng(seed).random(train.shape)
+                  for seed, name in enumerate(("EASE", "SLIMElastic"))}
+        first, record = fit_hybrid(scores, list(scores), train, valid, [1, 2], 10, 2020)
+        valid[3:] = ~valid[3:]
+        second, repeated = fit_hybrid(scores, list(scores), train, valid, [1, 2], 10, 2020)
+        np.testing.assert_array_equal(first, second)
+        self.assertEqual(record, repeated)
+        self.assertEqual(set(record["weights"]), set(scores))
+        self.assertAlmostEqual(sum(record["weights"].values()), 1)
+        self.assertEqual(record["fit_pairs"], 12)
+
+    def test_pipeline_accepts_new_hybrids(self):
+        valid = np.zeros_like(self.train)
+        valid[1, 2] = valid[2, 3] = True
+        test = np.zeros_like(self.train)
+        test[1, 4] = test[2, 5] = True
+        names = ["FeatureCombination", "TunedWeightedHybrid", "SwitchingHybrid"]
+        scores = {name: np.tile(self.scores, (3, 1)) for name in names}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            prepared = (scores, self.train, valid, test, self.genres, np.array([1, 2]), {})
+            with patch("task3.evaluate.prepare", return_value=prepared), patch("task3.evaluate.ARTIFACTS", root):
+                rows = run(names, [0, .5], 2, 5, .05, 2020, root)
+            self.assertEqual(len(rows), 15)
+            self.assertEqual({row["model"] for row in rows}, set(names))
 
     def test_pipeline_keeps_test_labels_out_of_selection(self):
         valid = np.zeros_like(self.train)

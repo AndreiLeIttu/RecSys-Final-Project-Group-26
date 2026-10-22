@@ -41,6 +41,66 @@
   },
   {
     "method": "diversity",
+    "model": "FeatureCombination",
+    "strength": 0.25
+  },
+  {
+    "method": "calibration",
+    "model": "FeatureCombination",
+    "strength": 0.1
+  },
+  {
+    "method": "user_fairness",
+    "model": "FeatureCombination",
+    "strength": 0.25
+  },
+  {
+    "method": "item_fairness",
+    "model": "FeatureCombination",
+    "strength": 0.25
+  },
+  {
+    "method": "diversity",
+    "model": "TunedWeightedHybrid",
+    "strength": 0.25
+  },
+  {
+    "method": "calibration",
+    "model": "TunedWeightedHybrid",
+    "strength": 0.1
+  },
+  {
+    "method": "user_fairness",
+    "model": "TunedWeightedHybrid",
+    "strength": 0.25
+  },
+  {
+    "method": "item_fairness",
+    "model": "TunedWeightedHybrid",
+    "strength": 0.25
+  },
+  {
+    "method": "diversity",
+    "model": "SwitchingHybrid",
+    "strength": 0.25
+  },
+  {
+    "method": "calibration",
+    "model": "SwitchingHybrid",
+    "strength": 0.1
+  },
+  {
+    "method": "user_fairness",
+    "model": "SwitchingHybrid",
+    "strength": 0.25
+  },
+  {
+    "method": "item_fairness",
+    "model": "SwitchingHybrid",
+    "strength": 0.25
+  },
+  {
+    "method": "diversity",
     "model": "Random",
     "strength": 0.5
   },

@@ -38,9 +38,17 @@ claim about movie quality, demographics, or equal exposure for every movie.
 - Reuse the seed-2020 Task 1 training/validation/test split and selected settings.
 - Refresh missing or outdated checkpoints in `artifacts/task3/checkpoints/`.
   Task 1's checkpoints and results are left intact.
-- Refit the Task 3 weighted hybrid on validation interactions from 471 users.
-  Tune rerankers on the other 472 users, chosen with a seeded shuffle.
-- Earlier base-model selection and early stopping used the full validation set.
+- Compare EASE, FeatureCombination, WeightedHybrid, TunedWeightedHybrid,
+  SwitchingHybrid, Random, and Pop.
+- Refit both regression hybrids on validation interactions from 471 users.
+  The original uses all 11 individual models and negative ratio 5; the tuned
+  hybrid reuses Task 1's selected components and ratio (SLIMElastic, EASE, NeuMF,
+  ItemKNN; ratio 10). Tune rerankers on the other 472 users, chosen with a seeded shuffle.
+- Reuse Task 1's switching choice. Its current winner is the SLIMElastic endpoint,
+  so no activity switch is applied. If a quantile switch is selected in a future
+  Task 1 run, its threshold is recomputed from the fit users' training activity.
+- Earlier base-model selection, early stopping, and hybrid structure/ratio/switch
+  selection used the full validation set.
   This is still development data, not a fully independent nested-validation study.
 - Try strengths `0, 0.1, 0.25, 0.5, 0.75, 1`. Select the best method-specific
   objective within a **5% relative validation nDCG loss** from its own baseline.
@@ -55,8 +63,8 @@ We add genre miscalibration, UPD, discounted exposure gap and exposure Gini
 (including items never recommended). Activity GRU is the absolute nDCG gap
 between users at/below the training-history median and those above it.
 
-The Task 3 hybrid is refitted, so its baseline can differ from Task 1's saved
-hybrid. Stable tie handling and fixed scoring batches can also change Random/Pop
+The Task 3 regression hybrids are refitted, so their baselines can differ from
+Task 1's saved hybrids. Stable tie handling and fixed scoring batches can also change Random/Pop
 results slightly. Compare each reranker with its own baseline in `test.csv`.
 
 ## Files and commands

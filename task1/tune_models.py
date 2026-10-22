@@ -10,7 +10,9 @@ from typing import Any
 import yaml
 
 from task1.experiment import evaluate_checkpoint, resolve_project_path, train_model
-from task1.io_utils import append_jsonl, flatten_result, read_jsonl, write_csv, write_json
+from task1.io_utils import (
+    append_jsonl, flatten_result, read_jsonl, write_csv, write_csv_history, write_json,
+)
 from task1.model_registry import PROJECT_ROOT, ModelSpec, resolve_models
 
 
@@ -165,7 +167,7 @@ def main() -> None:
                 record["checkpoint"] = path.relative_to(PROJECT_ROOT).as_posix()
     write_json(BEST_JSON, existing_best)
     write_csv(BEST_CSV, [flatten_result(row) for row in existing_best.values()])
-    write_csv(RESULTS_DIR / "tuning_trials.csv", [flatten_result(row) for row in all_trials])
+    write_csv_history(RESULTS_DIR / "tuning_trials.csv", [flatten_result(row) for row in all_trials])
 
     print(f"Trial history: {TRIALS_FILE}")
     print(f"Selected models: {BEST_JSON}")

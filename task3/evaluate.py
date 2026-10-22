@@ -10,7 +10,7 @@ import numpy as np
 from task1.io_utils import write_csv, write_json
 from task1.model_registry import MODEL_SPECS, PROJECT_ROOT
 from task3.metrics import evaluate_lists
-from task3.prepare import ARTIFACTS, prepare
+from task3.prepare import ARTIFACTS, DEFAULT_MODELS, SCORE_HYBRIDS, prepare
 from task3.rerankers import METHODS, build_profiles, candidates, rerank
 
 
@@ -36,7 +36,7 @@ def make_lists(candidate_rows, scores, users, method, strength, k, profiles):
 
 
 def run(models, strengths, k=10, candidate_count=100, max_loss=.05, seed=2020, output=None):
-    if not models or len(set(models)) != len(models) or any(m not in [*MODEL_SPECS, "WeightedHybrid"] for m in models):
+    if not models or len(set(models)) != len(models) or any(m not in [*MODEL_SPECS, *SCORE_HYBRIDS] for m in models):
         raise ValueError("Choose distinct supported models")
     if k < 1 or candidate_count < k or not 0 <= max_loss <= 1:
         raise ValueError("Need 0 < K <= candidates and a loss budget between 0 and 1")
@@ -134,8 +134,8 @@ def run(models, strengths, k=10, candidate_count=100, max_loss=.05, seed=2020, o
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--models", nargs="+", default=["EASE", "WeightedHybrid", "Random", "Pop"],
-                        choices=[*MODEL_SPECS, "WeightedHybrid"])
+    parser.add_argument("--models", nargs="+", default=DEFAULT_MODELS,
+                        choices=[*MODEL_SPECS, *SCORE_HYBRIDS])
     parser.add_argument("--strengths", type=float, nargs="+", default=[0, .1, .25, .5, .75, 1])
     parser.add_argument("--topk", type=int, default=10)
     parser.add_argument("--candidates", type=int, default=100)

@@ -1,0 +1,16 @@
+{
+  "limitation": "Base hyperparameters/early stopping already use validation; this is not fully nested validation.",
+  "negative_ratio": 10,
+  "protocol": "Weighted: 3-fold validation-user cross-fit; others: validation MRR@10. Test never selects settings.",
+  "switching": {
+    "endpoint": "SLIMElastic",
+    "kind": "switching",
+    "validation_mrr@10": 0.4224612432459728
+  },
+  "weighted_models": [
+    "SLIMElastic",
+    "EASE",
+    "NeuMF",
+    "ItemKNN"
+  ]
+}

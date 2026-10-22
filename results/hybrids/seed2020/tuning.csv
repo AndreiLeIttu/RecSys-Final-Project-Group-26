@@ -1,0 +1,17 @@
+kind,components,negative_ratio,validation_mrr@10,quantile,threshold,reverse,endpoint
+weighted,full,1,0.3831410224040128,,,,
+weighted,full,5,0.4271621303169553,,,,
+weighted,full,10,0.42584835630965007,,,,
+weighted,compact,1,0.38464374084734637,,,,
+weighted,compact,5,0.4271621303169553,,,,
+weighted,compact,10,0.42764943022101026,,,,
+switching,,,0.41782137386591256,0.25,27.0,False,
+switching,,,0.3753337036475955,0.25,27.0,True,
+switching,,,0.40291075426282214,0.5,53.0,False,
+switching,,,0.3902443232506859,0.5,53.0,True,
+switching,,,0.39760810651584777,0.6,75.0,False,
+switching,,,0.3955469709976603,0.6,75.0,True,
+switching,,,0.3816808059384942,0.75,120.0,False,
+switching,,,0.4114742715750139,0.75,120.0,True,
+switching,,,0.3706938342675352,,,,FeatureCombination
+switching,,,0.4224612432459728,,,,SLIMElastic

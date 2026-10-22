@@ -89,6 +89,31 @@ class IndependentMetricTests(unittest.TestCase):
         np.testing.assert_array_equal(scores, original)
         np.testing.assert_array_equal(rank_scores(scores, seen, 6)[0, 3:], [-1, -1, -1])
 
+    def test_point_prediction_fallback_uses_recbole_interaction(self):
+        from types import SimpleNamespace
+        import torch
+        from recbole.data.interaction import Interaction
+        from task2.recommendations import collect_test_rankings
+
+        class PointModel:
+            device = torch.device("cpu")
+
+            def eval(self):
+                return self
+
+            def full_sort_predict(self, interaction):
+                raise NotImplementedError
+
+            def predict(self, interaction):
+                return interaction["item_id"].float()
+
+        dataset = SimpleNamespace(user_num=3, item_num=4,
+                                  uid_field="user_id", iid_field="item_id")
+        batch = Interaction({"user_id": torch.tensor([1, 2])})
+        history = (torch.tensor([0, 1]), torch.tensor([3, 1]))
+        result = collect_test_rankings(PointModel(), [(batch, history, None, None)], dataset, 2)
+        np.testing.assert_array_equal(result[1:], [[2, 1], [3, 2]])
+
 
 if __name__ == "__main__":
     unittest.main()

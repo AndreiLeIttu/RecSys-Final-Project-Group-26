@@ -1,0 +1,56 @@
+{
+  "aggregation": "macro average over users with at least one test interaction; coverage is catalog-wide",
+  "beyond_accuracy_definitions": {
+    "AveragePopularity": "mean raw training interaction count per recommended item",
+    "Coverage": "unique top-K recommendations divided by nonpadding catalog size",
+    "IntraListDiversity": "macro mean pairwise genre cosine distance per user's list; singleton lists score 0",
+    "Novelty": "mean -log2((training item count + 1)/(training interactions + catalog size)) in bits"
+  },
+  "catalog_size": 1682,
+  "evaluated_models": [
+    "Random",
+    "Pop",
+    "ItemKNN",
+    "UserKNN",
+    "BPR",
+    "FISM",
+    "SLIMElastic",
+    "EASE",
+    "NeuMF",
+    "NGCF",
+    "LightGCN",
+    "FeatureCombination",
+    "WeightedHybrid",
+    "TunedWeightedHybrid",
+    "SwitchingHybrid"
+  ],
+  "evaluated_user_count": 943,
+  "evaluation_split": "test",
+  "interaction_counts": {
+    "test": 9596,
+    "train": 80808,
+    "validation": 9596
+  },
+  "protocol": "MovieLens 100K, seed 2020, user-grouped random-order 80/10/10 split",
+  "reference_checkpoint": "artifacts/best/Random.pth",
+  "selected_models": [
+    "Random",
+    "Pop",
+    "ItemKNN",
+    "UserKNN",
+    "BPR",
+    "FISM",
+    "SLIMElastic",
+    "EASE",
+    "NeuMF",
+    "NGCF",
+    "LightGCN",
+    "FeatureCombination",
+    "WeightedHybrid",
+    "TunedWeightedHybrid",
+    "SwitchingHybrid"
+  ],
+  "skipped_models": [],
+  "split_signature": "544c4e3e2f389b1c8dc7cba8ae76c580cdb85d34051d920cc059605c5f62a23f",
+  "topk": 10
+}

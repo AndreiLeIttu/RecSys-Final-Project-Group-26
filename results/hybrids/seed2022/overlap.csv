@@ -1,0 +1,4 @@
+first,second,top10_jaccard,first_wins,second_wins,ties
+SLIMElastic,EASE,0.67673983845776,201,175,567
+SLIMElastic,NeuMF,0.376874276363424,366,190,387
+EASE,NeuMF,0.3965151764801456,354,192,397

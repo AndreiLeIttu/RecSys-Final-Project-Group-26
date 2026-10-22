@@ -5,6 +5,7 @@ import hashlib
 import importlib.metadata
 import json
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -12,6 +13,7 @@ import numpy as np
 import torch
 
 from task1.experiment import load_data_and_model, train_model
+from task1.hybrid_selection import switch_scores
 from task1.model_registry import INDIVIDUAL_MODEL_NAMES, MODEL_SPECS, PROJECT_ROOT
 from task1.train_hybrid import collect_scores, dataset_signature
 from task1.weighted_hybrid import fit_weights, normalize_scores, regression_pairs
@@ -20,6 +22,9 @@ from recbole.utils import init_seed
 
 
 ARTIFACTS = PROJECT_ROOT / "artifacts" / "task3"
+SCORE_HYBRIDS = ("WeightedHybrid", "TunedWeightedHybrid", "SwitchingHybrid")
+DEFAULT_MODELS = ["EASE", "WeightedHybrid", "FeatureCombination",
+                  "TunedWeightedHybrid", "SwitchingHybrid", "Random", "Pop"]
 
 
 def file_hash(path):
@@ -58,11 +63,37 @@ def selected_checkpoint(name, record):
     return local
 
 
+def fit_hybrid(score_matrices, members, train, valid, fit_users, ratio, seed):
+    """Refit frozen Task 1 choices without reranker-tuning users' labels."""
+    fit_valid = np.zeros_like(valid)
+    fit_valid[fit_users] = valid[fit_users]
+    users, items, targets = regression_pairs(train, fit_valid, ratio, seed)
+    normalized = [normalize_scores(score_matrices[name], train) for name in members]
+    fitted = fit_weights(np.column_stack([scores[users, items] for scores in normalized]), targets)
+    hybrid = np.full(train.shape, fitted["intercept"], dtype=np.float32)
+    for weight, scores in zip(fitted["weights"], normalized):
+        hybrid += weight * scores
+    record = {
+        "weights": dict(zip(members, fitted["weights"].tolist())),
+        "intercept": fitted["intercept"], "training_mse": fitted["training_mse"],
+        "fit_pairs": len(targets), "negative_ratio": ratio,
+    }
+    return hybrid, record
+
+
 def prepare(models, seed):
     selected = json.loads((PROJECT_ROOT / "results/best_models.json").read_text())
+    choice_path = PROJECT_ROOT / "results/hybrids/seed2020/selection.json"
+    choices = (json.loads(choice_path.read_text())
+               if any(name in models for name in ("TunedWeightedHybrid", "SwitchingHybrid")) else {})
+    switch_choice = choices.get("switching", {})
+    switch_members = ([switch_choice["endpoint"]] if "endpoint" in switch_choice else
+                      ["FeatureCombination", "SLIMElastic"])
     names = list(dict.fromkeys([
-        *[name for name in models if name != "WeightedHybrid"],
+        *[name for name in models if name not in SCORE_HYBRIDS],
         *(INDIVIDUAL_MODEL_NAMES if "WeightedHybrid" in models else ()),
+        *(choices["weighted_models"] if "TunedWeightedHybrid" in models else ()),
+        *(switch_members if "SwitchingHybrid" in models else ()),
     ]))
     missing = [name for name in names if name not in selected]
     if missing:
@@ -107,37 +138,48 @@ def prepare(models, seed):
         }
         del model
     fit_users, tune_users = validation_users(valid, seed)
-    hybrid_record = None
-    if "WeightedHybrid" in models:
-        # Whole users are held out, including their validation-positive/negative pairs.
-        fit_valid = np.zeros_like(valid)
-        fit_valid[fit_users] = valid[fit_users]
-        users, items, targets = regression_pairs(train, fit_valid, 5, seed)
-        normalized = [normalize_scores(score_matrices[name], train) for name in INDIVIDUAL_MODEL_NAMES]
-        fitted = fit_weights(np.column_stack([scores[users, items] for scores in normalized]), targets)
-        hybrid = np.full(train.shape, fitted["intercept"], dtype=np.float32)
-        for weight, scores in zip(fitted["weights"], normalized):
-            hybrid += weight * scores
-        score_matrices["WeightedHybrid"] = hybrid
-        hybrid_record = {
-            "weights": dict(zip(INDIVIDUAL_MODEL_NAMES, fitted["weights"].tolist())),
-            "intercept": fitted["intercept"], "training_mse": fitted["training_mse"],
-            "fit_pairs": len(targets), "negative_ratio": 5,
-        }
-        np.savez_compressed(ARTIFACTS / "WeightedHybrid.npz", scores=hybrid,
+    hybrids = {}
+    for name in ("WeightedHybrid", "TunedWeightedHybrid"):
+        if name not in models:
+            continue
+        members = INDIVIDUAL_MODEL_NAMES if name == "WeightedHybrid" else choices["weighted_models"]
+        ratio = 5 if name == "WeightedHybrid" else choices["negative_ratio"]
+        score_matrices[name], hybrids[name] = fit_hybrid(
+            score_matrices, members, train, valid, fit_users, ratio, seed)
+    if "SwitchingHybrid" in models:
+        if "endpoint" in switch_choice:
+            score_matrices["SwitchingHybrid"] = score_matrices[switch_choice["endpoint"]].copy()
+            hybrids["SwitchingHybrid"] = {"endpoint": switch_choice["endpoint"]}
+        else:
+            activity = train.sum(axis=1)
+            threshold = float(np.quantile(activity[fit_users], switch_choice["quantile"]))
+            score_matrices["SwitchingHybrid"] = switch_scores(
+                score_matrices["FeatureCombination"], score_matrices["SLIMElastic"],
+                activity, threshold, switch_choice["reverse"])
+            hybrids["SwitchingHybrid"] = {"quantile": switch_choice["quantile"],
+                                          "threshold": threshold, "reverse": switch_choice["reverse"]}
+    for name, record in hybrids.items():
+        np.savez_compressed(ARTIFACTS / f"{name}.npz", scores=score_matrices[name],
+                            user_field=dataset.uid_field, item_field=dataset.iid_field,
                             user_tokens=user_tokens, item_tokens=item_tokens,
                             fit_users=fit_users, tune_users=tune_users,
-                            weights=fitted["weights"], intercept=fitted["intercept"],
-                            split_signature=signature)
+                            split_signature=signature,
+                            **({"weights": list(record["weights"].values()), "intercept": record["intercept"]}
+                               if "weights" in record else {}))
     manifest = {
         "split_signature": signature, "seed": seed, "score_batch_size": 16,
         "python": sys.version.split()[0],
         "packages": {name: importlib.metadata.version(name)
                      for name in ("numpy", "torch", "scipy", "pandas", "recbole")},
-        "components": components, "hybrid": hybrid_record,
+        "components": components, "hybrid": hybrids.get("WeightedHybrid"), "hybrids": hybrids,
+        "task1_hybrid_selection": choices,
+        "recbole_commit": subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=PROJECT_ROOT / "third_party/RecBole_DSAIT4335",
+            text=True).strip(),
         "hybrid_fit_users": len(fit_users), "reranker_tune_users": len(tune_users),
         "validation_user_split": "seeded permutation, first half fits hybrid, second half tunes rerankers",
-        "limitation": "Base hyperparameters and early stopping used the original full validation split. "
+        "limitation": "Base hyperparameters, early stopping and Task 1 hybrid structure/ratio/switch "
+                      "selection used the original full validation split. "
                       "The reranker tuning scores are development results, not independent estimates. "
                       "No test labels are used for fitting or selection.",
     }
