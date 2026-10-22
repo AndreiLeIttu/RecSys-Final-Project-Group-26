@@ -1,0 +1,28 @@
+{
+  "intercept": -0.07443811403919201,
+  "seed": 2022,
+  "selection": {
+    "limitation": "Base hyperparameters/early stopping already use validation; this is not fully nested validation.",
+    "negative_ratio": 10,
+    "protocol": "Weighted: 3-fold validation-user cross-fit; others: validation MRR@10. Test never selects settings.",
+    "switching": {
+      "endpoint": "SLIMElastic",
+      "kind": "switching",
+      "validation_mrr@10": 0.4224612432459728
+    },
+    "weighted_models": [
+      "SLIMElastic",
+      "EASE",
+      "NeuMF",
+      "ItemKNN"
+    ]
+  },
+  "split_signature": "76f98fe578d1211d3dda997a72ff7a47e81c833f3566966fce69cfd088558185",
+  "training_mse": 0.0561142741641025,
+  "weights": {
+    "EASE": 0.42032801342612924,
+    "ItemKNN": 0.0,
+    "NeuMF": 0.0748077572706945,
+    "SLIMElastic": 0.5048642293031763
+  }
+}

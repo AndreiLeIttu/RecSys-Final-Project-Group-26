@@ -93,7 +93,7 @@ def collect_test_rankings(model, test_data, dataset, k: int) -> np.ndarray:
         except NotImplementedError:
             user_count = len(interaction)
             tiled = interaction.repeat_interleave(dataset.item_num)
-            tiled.update({dataset.iid_field: item_ids.repeat(user_count)})
+            tiled[dataset.iid_field] = item_ids.repeat(user_count)
             scores = model.predict(tiled)
         _store_batch_topk(rankings, user_ids, scores, history_index, k)
     return rankings

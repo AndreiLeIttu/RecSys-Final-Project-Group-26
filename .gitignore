@@ -14,4 +14,6 @@ ray_log/
 wandb/
 
 results/*.jsonl
+results/hybrids/findings.md
+results/task2/findings.md
 

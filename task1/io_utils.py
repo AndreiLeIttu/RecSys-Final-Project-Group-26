@@ -45,6 +45,21 @@ def write_csv(path: Path, rows: Iterable[dict[str, Any]]) -> None:
         writer.writerows(rows)
 
 
+def write_csv_history(path: Path, rows: Iterable[dict[str, Any]]) -> None:
+    """Preserve archived runs when the local JSONL is absent or only partial.
+    """
+    existing = []
+    if path.exists():
+        with path.open(encoding="utf-8", newline="") as source:
+            existing = list(csv.DictReader(source))
+    identity = ("model", "candidate_key", "seed", "checkpoint", "status", "error")
+    merged = {}
+    for row in [*existing, *rows]:
+        key = tuple("" if row.get(field) is None else str(row[field]) for field in identity)
+        merged[key] = row
+    write_csv(path, merged.values())
+
+
 def flatten_result(record: dict[str, Any]) -> dict[str, Any]:
     flat = {
         "model": record.get("model"),

@@ -1,7 +1,7 @@
 # RecSys Final Project - Group 26
 
 This repository contains the group project for DSAIT4335 Recommender Systems. The course fork of RecBole is pinned as a
-Git submodule at `third_party/RecBole_DSAIT4335`.
+Git submodule at `third_party/RecBole_DSAIT4335`, pinned to course commit `7aa0ec9`.
 
 ## Setup
 
@@ -85,6 +85,8 @@ python -m task1.tune_models --models Random Pop --max-trials 1
 ```
 
 Completed trials are reused when the command is run again.
+Partial reruns preserve archived rows in `results/tuning_trials.csv`, even when
+the ignored local JSONL is absent. Missing checkpoints are retrained.
 
 After selecting each configuration on seed-2020 validation MRR@10, estimate
 robustness across three seeds without retuning on test results. Each seed changes
@@ -128,7 +130,7 @@ interaction labels. User profiles average the features of training-history movie
 training interaction counts. Profiles and popularity are rebuilt for each training split and stored as checkpoint
 buffers.
 
-Tune its three declared candidates and evaluate the validation winner:
+Tune its eight declared candidates and evaluate the validation winner:
 
 ```powershell
 python -m task1.tune_models --models FeatureCombination
@@ -156,7 +158,7 @@ python -m task1.train_hybrid
 
 This combines all eleven individual recommenders. It reuses local checkpoints in `artifacts/best/`. Since checkpoints
 are not committed, missing ones are automatically trained using the selected parameters in `results/best_models.json`
-and the model configurations. You do not need to repeat the 47-trial search. The existing Task 1.2 result files are
+and the model configurations. You do not need to repeat the 61 individual-model trials. The existing Task 1.2 result files are
 preserved. Training all missing models can take several minutes on CPU.
 
 For a smaller run, choose at least two distinct models:
@@ -251,16 +253,37 @@ python -m task2.evaluate --models Random Pop --topk 10 --no-recover-missing
 ```
 
 `--models` accepts any of `Random`, `Pop`, `ItemKNN`, `UserKNN`, `BPR`, `FISM`, `SLIMElastic`, `EASE`, `NeuMF`, `NGCF`,
-`LightGCN`, `FeatureCombination`, and `WeightedHybrid`. FeatureCombination and WeightedHybrid are included only when
-their selected checkpoint/artifact is available (or recoverable from saved Task 1 settings). Missing or failed models
+`LightGCN`, `FeatureCombination`, `WeightedHybrid`, `TunedWeightedHybrid`, and `SwitchingHybrid`.
+FeatureCombination and the score hybrids are included only when their selected checkpoint/artifact is available
+(individual checkpoints can be recovered from saved Task 1 settings). Missing or failed models
 are listed in the evaluation summary.
 
-The combined accuracy and beyond-accuracy table is written to `results/task2/all_metrics.csv`. Evaluated and skipped
-models are also reported in the command output. Comparisons use only actual evaluation results, not Task 1's stored
-metric values.
+The combined accuracy and beyond-accuracy table is written to `results/task2/all_metrics.csv`.
+`results/task2/evaluation_summary.json` records the protocol, evaluated/skipped models,
+user/catalog sizes, interaction counts, and split signature. The current seed-2020
+table evaluates all 15 available variants without skips. Three-seed robustness
+results and hybrid analysis tables are in `results/hybrids/`.
 
 Run the Task 2 metric tests with:
 
 ```bash
 python -m unittest discover -s tests -p 'test_task2_metrics.py'
 ```
+
+## Hybrid tuning and contribution analysis (Tasks 1.4-1.5, 2.3-2.4)
+
+From the repository root, run:
+
+```bash
+python -m task1.hybrid_experiments
+python -m task1.hybrid_experiments --seed 2021
+python -m task1.hybrid_experiments --seed 2022
+```
+
+The seed-2020 run selects FeatureCombination from eight candidates, compares
+full/compact regression hybrids at negative ratios 1/5/10 using three held-out
+validation-user folds, and selects an activity-based switch between SLIM and
+FeatureCombination. Four training-activity quantiles and both switch directions
+are considered, alongside the two single-model endpoints. An endpoint winner
+means switching did not improve validation performance. Other seeds reuse these
+choices and retrain the components. They change both split and training randomness.
