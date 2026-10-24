@@ -1,4 +1,5 @@
 import csv
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -8,6 +9,7 @@ import numpy as np
 
 from task3.evaluate import run, select_setting
 from task3.evaluate_hybrid_reranking import rank_aggregate, run as run_hybrid_reranking
+from task3.analyze_groups import run as run_group_analysis
 from task3.metrics import evaluate_lists, gini
 from task3.plot_hybrid_reranking import plot as plot_hybrid_reranking
 from task3.prepare import fit_hybrid, validation_users
@@ -151,12 +153,89 @@ class RerankingTests(unittest.TestCase):
                 self.assertEqual(len(list(csv.DictReader(source))), 16)
             self.assertTrue((root / "protocol.json").exists())
             plot_hybrid_reranking(root)
-            self.assertTrue((root / "TunedWeightedHybrid-validation-tradeoffs.png").exists())
-            self.assertTrue((root / "TunedWeightedHybrid-selected-test-table.png").exists())
+            self.assertTrue((root / "Task3.3-TunedWeightedHybrid-validation-tradeoffs.png").exists())
+            self.assertTrue((root / "Task3.3-TunedWeightedHybrid-selected-test-table.png").exists())
+            self.assertFalse((root / "Task3.3-TunedWeightedHybrid-validation-tradeoffs.svg").exists())
             with (root / "TunedWeightedHybrid-selected-test.csv").open(newline="") as source:
                 table_rows = list(csv.DictReader(source))
             self.assertEqual(len(table_rows), 9)
             self.assertEqual(table_rows[0]["strategy"], "original_hybrid_no_reranking")
+
+    def test_group_analysis_compares_selected_rankings_to_strategy_baseline(self):
+        users = np.array([1, 2])
+        valid = np.zeros_like(self.train)
+        test = np.zeros_like(self.train)
+        test[1, 3] = test[2, 4] = True
+        selected = [
+            {
+                "hybrid": "TunedWeightedHybrid",
+                "strategy": "rerank_components_then_aggregate",
+                "method": method,
+                "strength": .5,
+            }
+            for method in ("diversity", "item_fairness")
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "protocol.json").write_text(
+                '{"hybrids":["TunedWeightedHybrid"],"seed":2020,"topk":2}',
+                encoding="utf-8",
+            )
+            (root / "selected.json").write_text(json.dumps(selected), encoding="utf-8")
+            baseline_key = "rerank_components_then_aggregate__diversity__0.0"
+            selected_key = "rerank_components_then_aggregate__diversity__0.5"
+            baseline_fairness_key = "rerank_components_then_aggregate__item_fairness__0.0"
+            selected_fairness_key = "rerank_components_then_aggregate__item_fairness__0.5"
+            artifacts = root / "artifacts"
+            artifacts.mkdir()
+            np.savez_compressed(
+                artifacts / "TunedWeightedHybrid-task3_3-test-rankings.npz",
+                users=users,
+                **{
+                    baseline_key: np.array([[1, 2], [1, 3]]),
+                    selected_key: np.array([[3, 2], [4, 1]]),
+                    baseline_fairness_key: np.array([[1, 2], [1, 3]]),
+                    selected_fairness_key: np.array([[3, 2], [4, 1]]),
+                },
+            )
+            np.savez_compressed(
+                artifacts / "TunedWeightedHybrid-task3_3-test-candidates.npz",
+                users=users, items=np.array([[0, 0, 0], [1, 2, 3], [1, 3, 4]]),
+            )
+            prepared = (
+                {}, self.train, valid, test, self.genres, users, {},
+            )
+            with patch("task3.analyze_groups.prepare", return_value=prepared), \
+                    patch("task3.analyze_groups.ARTIFACTS", artifacts), \
+                    patch("task3.analyze_groups.BOOTSTRAP_REPLICATES", 100):
+                user_rows, item_rows = run_group_analysis(root)
+            self.assertTrue((root / "user_groups.csv").exists())
+            self.assertTrue((root / "item_groups.csv").exists())
+            self.assertTrue((root / "Task3.4-TunedWeightedHybrid-user-group-accuracy.png").exists())
+            self.assertTrue((root / "Task3.4-TunedWeightedHybrid-user-group-objectives.png").exists())
+            self.assertTrue((root / "Task3.4-TunedWeightedHybrid-item-group-exposure.png").exists())
+            self.assertFalse((root / "Task3.4-TunedWeightedHybrid-item-group-recall.png").exists())
+            self.assertFalse((root / "Task3.4-TunedWeightedHybrid-item-group-precision.png").exists())
+            self.assertFalse((root / "Task3.4-TunedWeightedHybrid-item-group-hit-rate.png").exists())
+            low_delta = next(
+                row for row in user_rows
+                if row["metric"] == "NDCG" and row["user_group"] == "low"
+            )
+            self.assertGreater(low_delta["delta"], 0)
+            self.assertEqual({row["item_group"] for row in item_rows}, {"head", "tail"})
+            self.assertTrue(all("ci95_low" in row and "ci95_high" in row for row in user_rows))
+            self.assertEqual(
+                {row["metric"] for row in user_rows if row["method"] == "diversity"},
+                {"Precision", "Recall", "NDCG", "MRR", "Hit", "IntraListDiversity"},
+            )
+            self.assertTrue(any(
+                row["metric"] == "ExposureGap" and row["method"] == "item_fairness"
+                for row in user_rows
+            ))
+            self.assertEqual(
+                {row["metric"] for row in item_rows},
+                {"exposure_share", "recall", "precision", "hit_rate"},
+            )
 
     def test_pipeline_accepts_new_hybrids(self):
         valid = np.zeros_like(self.train)

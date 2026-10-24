@@ -316,17 +316,48 @@ trials and selected strengths are saved under `results/task3_3/`, along with
 the held-out test comparison and its protocol manifest. Component-list
 aggregation uses the existing hybrid weights applied to normalized rank scores.
 
-Generate validation trade-off and held-out test comparison plots with:
+Generate the report-ready validation figure and held-out test table with:
 
 ```bash
 python -m task3.plot_hybrid_reranking
 ```
 
-This writes PNG and SVG versions of the validation trade-offs, plus selected-
-test metric tables in PNG, SVG, and CSV formats, into the results directory.
-The validation plots mark the unreranked hybrid's NDCG baseline and label the
-selected reranking strengths. Use `--directory` if the evaluation was saved
-somewhere other than `results/task3_3/`.
+This generates `Task3.3-TunedWeightedHybrid-validation-tradeoffs.png`
+(Figure 1) and `Task3.3-TunedWeightedHybrid-selected-test-table.png` (Table 1)
+in the results directory. The figure marks the original hybrid's validation
+NDCG and each strategy's selected strength; the table reports held-out NDCG
+and all four reranking quality metrics. Use `--svg` for optional SVG exports
+and `--directory` if results are elsewhere. Existing CSV outputs are retained.
+If multiple hybrids were evaluated, the same pair is generated for each.
+
+## Task 3.4: Group impact analysis
+
+Analyze whether the validation-selected rerankers affect users and items
+differently on the held-out test set:
+
+```bash
+python -m task3.analyze_groups
+```
+
+Users are split into low/high groups at the median number of training
+interactions. Items use the Task 3 popularity groups: head is the top 20% by
+training interaction count, and tail is the rest. The analysis compares each
+validation-selected reranker to the original hybrid's top-K ranking from the
+same saved candidate pool, with no group-specific retuning. It writes
+`user_groups.csv` (group accuracy and
+objective metrics, baseline/reranked values, changes, and paired 95% bootstrap
+intervals) and `item_groups.csv` (head/tail exposure share, recall, precision,
+and hit rate with baseline/reranked values, changes, intervals, and group
+sizes). Its three report figures are `Task3.4-TunedWeightedHybrid-user-group-accuracy.png`
+(Figure 2), `Task3.4-TunedWeightedHybrid-user-group-objectives.png` (Figure 3),
+and `Task3.4-TunedWeightedHybrid-item-group-exposure.png` (Figure 4). Item
+relevance metrics remain in the CSVs but do not produce additional default
+figures. Add `--svg` for optional SVG exports. All groups are defined from
+training data only; test interactions are used only to calculate held-out
+quality metrics. Confidence intervals are descriptive and are not treated as
+significance tests. Run Task 3.3 first so its saved test rankings and selected
+settings are available. Each additional evaluated hybrid receives the same
+three group figures.
 
 ## Hybrid tuning and contribution analysis (Tasks 1.4-1.5, 2.3-2.4)
 

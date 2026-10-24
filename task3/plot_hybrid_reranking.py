@@ -17,9 +17,11 @@ from task3.evaluate_hybrid_reranking import STRATEGIES
 from task3.evaluate import OBJECTIVES
 
 
+matplotlib.rcParams.update({"font.size": 10, "axes.titlesize": 11, "axes.labelsize": 10})
+
 STRATEGY_LABELS = {
-    "rerank_components_then_aggregate": "Rerank components → aggregate",
-    "aggregate_then_rerank": "Aggregate → rerank",
+    "rerank_components_then_aggregate": "Rerank → Aggregate",
+    "aggregate_then_rerank": "Aggregate → Rerank",
 }
 OBJECTIVE_METRICS = {
     "diversity": "IntraListDiversity",
@@ -81,7 +83,7 @@ def _test_table_rows(test_rows, selections, hybrid, k):
     return table_rows
 
 
-def _write_test_table(directory, hybrid, rows, k):
+def _write_test_table(directory, hybrid, rows, k, include_svg):
     metric_names = [
         key for key in rows[0]
         if key.endswith(f"@{k}") and not key.startswith("delta_")
@@ -100,11 +102,11 @@ def _write_test_table(directory, hybrid, rows, k):
     )
     metric_headers = {
         f"NDCG@{k}": f"NDCG@{k}",
-        f"delta_NDCG@{k}": "Delta NDCG",
-        f"IntraListDiversity@{k}": "Diversity",
+        f"delta_NDCG@{k}": f"Delta\nNDCG@{k}",
+        f"IntraListDiversity@{k}": "IntraList\nDiversity",
         f"Miscalibration@{k}": "Miscalibration",
-        f"UPD@{k}": "User fairness",
-        f"ExposureGap@{k}": "Item fairness",
+        f"UPD@{k}": "UPD\n(user fairness)",
+        f"ExposureGap@{k}": "ExposureGap\n(item fairness)",
     }
     headers = [
         "Approach", "Objective", "Strength",
@@ -126,7 +128,7 @@ def _write_test_table(directory, hybrid, rows, k):
         ])
 
     fig_height = max(3.2, .43 * (len(cells) + 1))
-    fig, ax = plt.subplots(figsize=(15, fig_height), layout="constrained")
+    fig, ax = plt.subplots(figsize=(17, fig_height), layout="constrained")
     ax.axis("off")
     table = ax.table(
         cellText=cells, colLabels=headers, loc="center", cellLoc="center",
@@ -135,19 +137,23 @@ def _write_test_table(directory, hybrid, rows, k):
     table.auto_set_font_size(False)
     table.set_fontsize(8)
     table.scale(1, 1.4)
-    for column, width in enumerate((.19, .12, .07, *([.075] * len(displayed_metrics)))):
+    widths = (.19, .12, .07, .09, .09, .11, .11, .10, .12)
+    for column, width in enumerate(widths):
         for row_index in range(len(cells) + 1):
             table[(row_index, column)].set_width(width)
     ax.set_title(
-        f"{hybrid}: held-out test metrics at validation-selected settings",
+        f"Table 1 — Held-out Test Performance of Hybrid Reranking Strategies\n{hybrid}",
         pad=16,
     )
-    fig.savefig(directory / f"{hybrid}-selected-test-table.png", dpi=180, bbox_inches="tight")
-    fig.savefig(directory / f"{hybrid}-selected-test-table.svg", bbox_inches="tight")
+    fig.savefig(directory / f"Task3.3-{hybrid}-selected-test-table.png",
+                dpi=200, bbox_inches="tight")
+    if include_svg:
+        fig.savefig(directory / f"Task3.3-{hybrid}-selected-test-table.svg",
+                    bbox_inches="tight")
     plt.close(fig)
 
 
-def plot(directory):
+def plot(directory, include_svg=False):
     directory = Path(directory)
     validation = _read_csv(directory / "validation.csv")
     test = _read_csv(directory / "test.csv")
@@ -208,23 +214,27 @@ def plot(directory):
                 baseline_ndcg, color="#333333", linestyle="--", linewidth=1.3,
                 label=f"Original hybrid baseline ({baseline_ndcg:.3f})",
             )
-            ax.set_title(method.replace("_", " ").title())
+            direction_label = "higher is better" if direction == 1 else "lower is better"
+            ax.set_title(
+                f"{method.replace('_', ' ').title()}\n{metric}@{k} ({direction_label})",
+            )
             ax.set_xlabel(f"Validation NDCG@{k} (higher is better)")
             ax.set_ylabel(f"{metric}@{k} ({'higher' if direction == 1 else 'lower'} is better)")
             ax.grid(alpha=.25)
             ax.legend(fontsize=8)
         fig.suptitle(
-            f"{hybrid}: validation reranking trade-offs\n"
-            "Stars mark each strategy's validation-selected strength",
+            f"Figure 1 — Accuracy–Quality Trade-offs of Hybrid Reranking Strategies\n"
+            f"{hybrid} | Stars mark validation-selected strengths",
             fontsize=13,
         )
-        fig.savefig(directory / f"{hybrid}-validation-tradeoffs.png", dpi=160)
-        fig.savefig(directory / f"{hybrid}-validation-tradeoffs.svg")
+        fig.savefig(directory / f"Task3.3-{hybrid}-validation-tradeoffs.png", dpi=200)
+        if include_svg:
+            fig.savefig(directory / f"Task3.3-{hybrid}-validation-tradeoffs.svg")
         plt.close(fig)
 
         _write_test_table(
             directory, hybrid,
-            _test_table_rows(test_rows, selected, hybrid, k), k,
+            _test_table_rows(test_rows, selected, hybrid, k), k, include_svg,
         )
 
     print(f"Saved Task 3.3 plots to {directory}", flush=True)
@@ -233,5 +243,6 @@ def plot(directory):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--directory", type=Path, default=PROJECT_ROOT / "results/task3_3")
+    parser.add_argument("--svg", action="store_true", help="Also export SVG versions")
     args = parser.parse_args()
-    plot(args.directory)
+    plot(args.directory, args.svg)
