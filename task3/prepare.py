@@ -81,7 +81,7 @@ def fit_hybrid(score_matrices, members, train, valid, fit_users, ratio, seed):
     return hybrid, record
 
 
-def prepare(models, seed):
+def prepare(models, seed, include_components=False):
     selected = json.loads((PROJECT_ROOT / "results/best_models.json").read_text())
     choice_path = PROJECT_ROOT / "results/hybrids/seed2020/selection.json"
     choices = (json.loads(choice_path.read_text())
@@ -183,4 +183,5 @@ def prepare(models, seed):
                       "The reranker tuning scores are development results, not independent estimates. "
                       "No test labels are used for fitting or selection.",
     }
-    return {name: score_matrices[name] for name in models}, train, valid, test, genres, tune_users, manifest
+    output_names = list(dict.fromkeys([*names, *models])) if include_components else models
+    return {name: score_matrices[name] for name in output_names}, train, valid, test, genres, tune_users, manifest

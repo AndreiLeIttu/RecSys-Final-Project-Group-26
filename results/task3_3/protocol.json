@@ -1,0 +1,110 @@
+{
+  "candidate_pool": "Top candidates from the unreranked hybrid; same pool for both strategies",
+  "candidates": 100,
+  "code_sha256": {
+    "task3/__init__.py": "3a129320da635b8e302e659ace37a08d43fe14d204cfabeb484cdfb60c7445e4",
+    "task3/evaluate.py": "f28b61f7980cccd44c4ba424d495dcc852c4d24b1c3c0b49cd6588629707c3c0",
+    "task3/evaluate_hybrid_reranking.py": "3a956a35dc3e8e8d432744a07371c2b5b200c7b734a0c297d211ae79be6ae66f",
+    "task3/metrics.py": "229fffdc7bd2de9deb3d24355653be30c529e9f3a543a6433f558a4ed8037888",
+    "task3/plot_results.py": "31a59595caaca699e03929af5fb580ac0edf990de873f1867db5270e081125e7",
+    "task3/prepare.py": "fd6c383f7e85ca8c2249488bcfb5d77bc3cc9d173a44cc0eeb254b2cb3b3ecc6",
+    "task3/rerankers.py": "5f7392daa9024b13afc73e10e75565f4ae924f11b2db744887b852bba20d2b8d"
+  },
+  "components": {
+    "EASE": {
+      "checkpoint": "artifacts/task3/checkpoints/EASE.pth",
+      "checkpoint_sha256": "e4969747e8f06cc119bfdb9e4d5a3feb17a21c7b8be56ee493a55880f4ca8faa",
+      "parameters": {
+        "reg_weight": 350.0
+      },
+      "score_sha256": "8db7c05451a8e7f0e39f24bfebc4c49f18a60e0127d2f47f763039c628ccdfa8"
+    },
+    "ItemKNN": {
+      "checkpoint": "artifacts/task3/checkpoints/ItemKNN.pth",
+      "checkpoint_sha256": "dbd08cb544da0dbca2fab41f42e907a9ce62e22b0e7a67f450173ab0f1601b6c",
+      "parameters": {
+        "k": 75
+      },
+      "score_sha256": "d14122df3169c61eeac32290ae263c05d253856c5b767f11b6bb22068570a82c"
+    },
+    "NeuMF": {
+      "checkpoint": "artifacts/task3/checkpoints/NeuMF.pth",
+      "checkpoint_sha256": "9aad0662c9f58532a6052538059bfe2a05ace598a476e2a9ee167b57fb701250",
+      "parameters": {
+        "dropout_prob": 0.1,
+        "learning_rate": 0.001,
+        "mf_embedding_size": 64,
+        "mlp_embedding_size": 64,
+        "mlp_hidden_size": [
+          128,
+          64
+        ]
+      },
+      "score_sha256": "bd59dc377269e248b67d74c78ed6b3ce003c4e0d8c60a3d745a1eacce0868017"
+    },
+    "SLIMElastic": {
+      "checkpoint": "artifacts/task3/checkpoints/SLIMElastic.pth",
+      "checkpoint_sha256": "3680b46540e972226be82e26a31f63154929469f050474d576e8cbfc0ec25446",
+      "parameters": {
+        "alpha": 0.2,
+        "l1_ratio": 0.01
+      },
+      "score_sha256": "5913a6b147f29948554d6155cd03451dc07238ecc74d666f996459a6ca3f7618"
+    }
+  },
+  "hybrid": null,
+  "hybrid_fit_users": 471,
+  "hybrids": [
+    "TunedWeightedHybrid"
+  ],
+  "limitation": "Base hyperparameters, early stopping and Task 1 hybrid structure/ratio/switch selection used the original full validation split. The reranker tuning scores are development results, not independent estimates. No test labels are used for fitting or selection.",
+  "max_relative_validation_ndcg_loss": 0.05,
+  "packages": {
+    "numpy": "1.26.4",
+    "pandas": "2.2.3",
+    "recbole": "1.2.1",
+    "scipy": "1.17.1",
+    "torch": "2.14.1"
+  },
+  "python": "3.11.9",
+  "rank_aggregation": "Weighted sum of per-component normalized rank scores (top-K scores decrease linearly from 1 to 1/K); uses fitted hybrid weights.",
+  "recbole_commit": "439c5a899296cbaad9842751dd4355393f22d679",
+  "reranker_tune_users": 472,
+  "score_batch_size": 16,
+  "seed": 2020,
+  "selection": "Per strategy and method, best validation objective within the NDCG budget",
+  "split_signature": "544c4e3e2f389b1c8dc7cba8ae76c580cdb85d34051d920cc059605c5f62a23f",
+  "status": "complete",
+  "strategies": {
+    "aggregate_then_rerank": "Apply the existing weighted score hybrid, then rerank that hybrid's ranking on the same candidate pool.",
+    "rerank_components_then_aggregate": "Rerank each component on the common hybrid-derived candidate pool; convert its top-K list to normalized rank scores; aggregate with the hybrid's fitted component weights."
+  },
+  "strengths": [
+    0.0,
+    0.1,
+    0.25,
+    0.5,
+    0.75,
+    1
+  ],
+  "task": "3.3",
+  "task1_hybrid_selection": {
+    "limitation": "Base hyperparameters/early stopping already use validation; this is not fully nested validation.",
+    "negative_ratio": 10,
+    "protocol": "Weighted: 3-fold validation-user cross-fit; others: validation MRR@10. Test never selects settings.",
+    "switching": {
+      "endpoint": "SLIMElastic",
+      "kind": "switching",
+      "validation_mrr@10": 0.4224612432459728
+    },
+    "weighted_models": [
+      "SLIMElastic",
+      "EASE",
+      "NeuMF",
+      "ItemKNN"
+    ]
+  },
+  "test_users": 943,
+  "topk": 10,
+  "validation_user_split": "seeded permutation, first half fits hybrid, second half tunes rerankers"
+}

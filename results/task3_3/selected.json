@@ -1,0 +1,50 @@
+[
+  {
+    "hybrid": "TunedWeightedHybrid",
+    "method": "diversity",
+    "strategy": "rerank_components_then_aggregate",
+    "strength": 0.25
+  },
+  {
+    "hybrid": "TunedWeightedHybrid",
+    "method": "calibration",
+    "strategy": "rerank_components_then_aggregate",
+    "strength": 0.1
+  },
+  {
+    "hybrid": "TunedWeightedHybrid",
+    "method": "user_fairness",
+    "strategy": "rerank_components_then_aggregate",
+    "strength": 0.25
+  },
+  {
+    "hybrid": "TunedWeightedHybrid",
+    "method": "item_fairness",
+    "strategy": "rerank_components_then_aggregate",
+    "strength": 0.25
+  },
+  {
+    "hybrid": "TunedWeightedHybrid",
+    "method": "diversity",
+    "strategy": "aggregate_then_rerank",
+    "strength": 0.25
+  },
+  {
+    "hybrid": "TunedWeightedHybrid",
+    "method": "calibration",
+    "strategy": "aggregate_then_rerank",
+    "strength": 0.1
+  },
+  {
+    "hybrid": "TunedWeightedHybrid",
+    "method": "user_fairness",
+    "strategy": "aggregate_then_rerank",
+    "strength": 0.25
+  },
+  {
+    "hybrid": "TunedWeightedHybrid",
+    "method": "item_fairness",
+    "strategy": "aggregate_then_rerank",
+    "strength": 0.25
+  }
+]

@@ -298,6 +298,36 @@ python -m task3.plot_results --directory results/task3-ease --models EASE
 See [the method and evaluation notes](task3/README.md) and
 [the results discussion](results/task3/discussion.md).
 
+## Task 3.3: Hybrid reranking order
+
+Compare two ways to combine reranking with a weighted hybrid: rerank each
+component's list and aggregate the reranked lists with the hybrid's fitted
+weights, or aggregate the original component scores first and rerank that
+hybrid ranking. Both strategies use the same hybrid-derived candidate pool,
+reranking objectives, validation selection rule, and Task 2/3 metrics.
+
+```bash
+python -m task3.evaluate_hybrid_reranking
+```
+
+By default, this evaluates `TunedWeightedHybrid`; pass
+`--hybrids WeightedHybrid TunedWeightedHybrid` to compare both weighted hybrids. Validation
+trials and selected strengths are saved under `results/task3_3/`, along with
+the held-out test comparison and its protocol manifest. Component-list
+aggregation uses the existing hybrid weights applied to normalized rank scores.
+
+Generate validation trade-off and held-out test comparison plots with:
+
+```bash
+python -m task3.plot_hybrid_reranking
+```
+
+This writes PNG and SVG versions of the validation trade-offs, plus selected-
+test metric tables in PNG, SVG, and CSV formats, into the results directory.
+The validation plots mark the unreranked hybrid's NDCG baseline and label the
+selected reranking strengths. Use `--directory` if the evaluation was saved
+somewhere other than `results/task3_3/`.
+
 ## Hybrid tuning and contribution analysis (Tasks 1.4-1.5, 2.3-2.4)
 
 From the repository root, run:

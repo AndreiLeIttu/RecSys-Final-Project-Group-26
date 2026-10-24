@@ -1,3 +1,4 @@
+import csv
 import tempfile
 import unittest
 from pathlib import Path
@@ -6,7 +7,9 @@ from unittest.mock import patch
 import numpy as np
 
 from task3.evaluate import run, select_setting
+from task3.evaluate_hybrid_reranking import rank_aggregate, run as run_hybrid_reranking
 from task3.metrics import evaluate_lists, gini
+from task3.plot_hybrid_reranking import plot as plot_hybrid_reranking
 from task3.prepare import fit_hybrid, validation_users
 from task3.rerankers import (
     METHODS, build_profiles, candidates, miscalibration, popularity_deviation, rerank,
@@ -106,6 +109,54 @@ class RerankingTests(unittest.TestCase):
         self.assertEqual(set(record["weights"]), set(scores))
         self.assertAlmostEqual(sum(record["weights"].values()), 1)
         self.assertEqual(record["fit_pairs"], 12)
+
+    def test_rank_aggregation_uses_hybrid_weights(self):
+        scores = {
+            "first": np.tile([0, 1, .9, .8, .7, .6], (3, 1)),
+            "second": np.tile([0, .6, .7, .8, .9, 1], (3, 1)),
+        }
+        ranked = rank_aggregate(
+            [1, 2, 3, 4, 5], scores, ["first", "second"], [.8, .2],
+            "diversity", 0, 2, self.profiles, 1,
+        )
+        self.assertEqual(ranked, [1, 2])
+
+    def test_hybrid_reranking_pipeline_evaluates_both_orders(self):
+        valid = np.zeros_like(self.train)
+        valid[1, 2] = valid[2, 3] = True
+        test = np.zeros_like(self.train)
+        test[1, 4] = test[2, 5] = True
+        scores = {
+            "EASE": np.tile(self.scores, (3, 1)),
+            "Pop": np.tile(self.scores[::-1], (3, 1)),
+            "TunedWeightedHybrid": np.tile(self.scores, (3, 1)),
+        }
+        manifest = {"hybrids": {"TunedWeightedHybrid": {
+            "weights": {"EASE": .75, "Pop": .25},
+        }}}
+        prepared = (
+            scores, self.train, valid, test, self.genres, np.array([1, 2]), manifest,
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            with patch("task3.evaluate_hybrid_reranking.prepare", return_value=prepared), \
+                    patch("task3.evaluate_hybrid_reranking.ARTIFACTS", root):
+                rows = run_hybrid_reranking(
+                    ["TunedWeightedHybrid"], [0, .5], 2, 5, .05, 2020, root,
+                )
+            self.assertEqual({row["strategy"] for row in rows}, {
+                "rerank_components_then_aggregate", "aggregate_then_rerank",
+            })
+            with (root / "validation.csv").open(newline="") as source:
+                self.assertEqual(len(list(csv.DictReader(source))), 16)
+            self.assertTrue((root / "protocol.json").exists())
+            plot_hybrid_reranking(root)
+            self.assertTrue((root / "TunedWeightedHybrid-validation-tradeoffs.png").exists())
+            self.assertTrue((root / "TunedWeightedHybrid-selected-test-table.png").exists())
+            with (root / "TunedWeightedHybrid-selected-test.csv").open(newline="") as source:
+                table_rows = list(csv.DictReader(source))
+            self.assertEqual(len(table_rows), 9)
+            self.assertEqual(table_rows[0]["strategy"], "original_hybrid_no_reranking")
 
     def test_pipeline_accepts_new_hybrids(self):
         valid = np.zeros_like(self.train)
