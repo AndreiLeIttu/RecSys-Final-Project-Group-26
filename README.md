@@ -1,7 +1,31 @@
 # RecSys Final Project - Group 26
 
+## Tasks 2.5 and 2.6: original-model groups and an adaptive hybrid
+
+```powershell
+python -m task2.group_analysis
+python -m unittest discover -s tests -p 'test_group_analysis.py'
+```
+
+See [the audit and plan](task2/TASK25_PLAN.md). The command evaluates all
+selected individual and hybrid models without reranking, then evaluates a
+four-cell user switch selected using validation MRR. Groups use only training
+activity and head-item preference; item groups cover head, tail and cold items.
+The minimum cell support is 30 validation users and the minimum switching gain
+is 0.005 MRR. Endpoints are allowed. Cross-fitted gate development results,
+paired test bootstrap intervals and validation reuse limits are recorded.
+
+Outputs in `results/task2_groups/` include `user_groups.csv`, `item_groups.csv`,
+`per_user.csv`, `paired_deltas.csv`, `gate_selection.csv`, `protocol.json`,
+`findings.md`, `report_sections.md` and `group_comparison.png`. Missing selected checkpoints are
+recovered locally. Weighted hybrids are refitted using the existing Task 3
+preparation protocol, reserving half of validation users for gate development;
+therefore these fresh comparisons may differ from the earlier Task 2.2 table.
+Use `--models EASE ItemKNN Pop Random` for an explicitly smaller experiment.
+Each run replaces only its chosen output directory (`--output-dir`).
+
 This repository contains the group project for DSAIT4335 Recommender Systems. The course fork of RecBole is pinned as a
-Git submodule at `third_party/RecBole_DSAIT4335`, pinned to course commit `7aa0ec9`.
+Git submodule at `third_party/RecBole_DSAIT4335`, pinned to course commit `439c5a8`.
 
 ## Setup
 
