@@ -1,0 +1,317 @@
+\documentclass[12pt,a4paper]{article}   % 12pt + A4 required by the assignment
+\usepackage{graphicx} % Required for inserting images
+
+% ---- formatting required by the assignment: Times New Roman, 12pt, spacing 1.15 ----
+% Applies everywhere, including tables and captions (no smaller fonts, no scaled tables).
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{newtxtext,newtxmath}
+\usepackage[top=1.8cm,bottom=1.8cm,left=2cm,right=2cm]{geometry}
+\usepackage{setspace}
+\setstretch{1.15}
+
+% ---- tables, figures, captions ----
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{array}
+\usepackage[labelfont=bf,skip=3pt]{caption}   % captions in 12pt like the text
+\usepackage[compact]{titlesec}
+\usepackage{url}
+
+% ---- compact headings so each task fits on one page ----
+\titleformat{\section}{\large\bfseries}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{0.5em}{}
+\titlespacing*{\section}{0pt}{0pt}{3pt}
+\titlespacing*{\subsection}{0pt}{2pt}{0pt}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{3pt}
+\setlength{\tabcolsep}{4pt}
+\setlength{\textfloatsep}{6pt}
+\setlength{\floatsep}{4pt}
+\setlength{\intextsep}{4pt}
+
+\newcommand{\ra}{$\rightarrow$}
+
+\title{RecSys Group Project\\[4pt]
+  \large DSAIT4335 Recommender Systems -- Final Project Report\\[2pt]
+  \large Group 26}
+\author{
+  a.ionita \and [Name 2] \and [Name 3] \and [Name 4] \and [Name 5]\\[6pt]
+  Code: \url{https://github.com/AndreiLeIttu/RecSys-Final-Project-Group-26}
+}
+\date{October 2026}
+
+\begin{document}
+
+% First page: group information and a short introduction
+\maketitle
+\thispagestyle{empty}
+\pagestyle{empty}
+
+\vspace{1cm}
+This report presents our work on the final project of DSAIT4335. On MovieLens-100K, we built eleven individual recommenders and four hybrids, evaluated them on both accuracy and beyond-accuracy metrics, and applied four reranking methods aimed at diversity, calibration and fairness. Each task has its own section, in which we explain the choices we made and what the results told us; additional tables and figures are collected in the appendix. A theme that recurs throughout is the strong role of popularity in this dataset, which shapes both how our models behave and what the rerankers are able to change.
+
+\newpage
+
+%% =====================================================================
+\section{Task 1: Building the recommenders}
+%% =====================================================================
+
+To build the recommenders we use MovieLens-100K (943 users, 1,682 films), treat every rating as an implicit positive, split each user's history at random 80/10/10 (seed 2020) and rank all unseen films. Models are selected on validation MRR@10, tested once, and retrained on two more seeds. We cover the collaborative models from the course, but chose them in pairs that differ in a single design decision, so that each comparison isolates one mechanism: ItemKNN vs.\ UserKNN (item- or user-side similarity), SLIM vs.\ EASE (sparse iterative or dense closed-form item weights, the latter suited to small dense data), BPR vs.\ FISM (free user vectors or users built from their items, which should help sparse users), BPR vs.\ NeuMF (dot product or learned non-linear interaction) and NGCF vs.\ LightGCN (graph propagation with or without non-linearities). Since the data are popularity-skewed (the top fifth of films receives 65\% of training ratings), Pop shows how far popularity alone goes (strengths and limitations: Table~\ref{tab:rationale}). We tuned with a coarse grid refined around the best settings (69 trials, neural models $\leq$20 epochs; Appendix~\ref{app:task1}). Of the hybrids, FeatureCombination adds genres, plot text and popularity to collaborative embeddings in a small neural network; WeightedHybrid regresses validation positives against sampled negatives on per-user normalised scores, with non-negative weights summing to one (TunedWH also tunes components and negatives); SwitchingHybrid routes users between SLIM and FeatureCombination by activity.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lrr@{\hspace{2.2em}}lrr}
+\toprule
+Model & Val MRR & Test NDCG & Model & Val MRR & Test NDCG \\
+\midrule
+Random & .012 & .008 $\pm$ .000 & NGCF & .305 & .210$^*$ \\
+Pop & .185 & .106 $\pm$ .023 & LightGCN & .343 & .251 $\pm$ .011 \\
+ItemKNN & .380 & .276 $\pm$ .006 & SLIM & .423 & .328 $\pm$ .008 \\
+UserKNN & .401 & .282 $\pm$ .012 & EASE & .420 & .327 $\pm$ .008 \\
+BPR & .378 & .277 $\pm$ .010 & FeatComb & .371 & .246 $\pm$ .005 \\
+FISM & .331 & .243$^*$ & TunedWH & .428 & \textbf{.332 $\pm$ .009} \\
+NeuMF & .370 & .275 $\pm$ .009 & Switching & .422 & .328 $\pm$ .008 \\
+\bottomrule
+\end{tabular}
+\caption{Validation MRR@10 (seed 2020) and test NDCG@10 (mean $\pm$ sd over 3 seeds; $^*$one seed). Configurations: Appendix~\ref{app:task1}.}
+\label{tab:task1}
+\end{table}
+
+\subsection{Discussion}
+
+Tuning already reveals much about the data. EASE and SLIM barely reacted to regularisation (EASE MRR .412--.420 for $\lambda$ 150--500) and only degraded when it was weakened or made sparser: on a small, dense catalogue co-occurrences are well estimated, so the risk is overfitting rare pairs. The embedding models were still undertrained after 20 epochs: for BPR, LightGCN and FeatComb the smallest learning rate lost, and four FISM settings collapsed to the same popularity-like solution. The pairs answer their questions: at the same learning rate NGCF and LightGCN were level (MRR .305 vs .308), so LightGCN's lead came from a higher rate we did not try for NGCF, NeuMF gained nothing over BPR's dot product, FISM's item-built users did not help, and SLIM and EASE were equivalent.
+
+For the weighted hybrid, the number of negatives mattered more than the components. With one negative the regression mainly separates relevant films from obscure ones, which popularity already does; with ten it must rank plausible candidates, and validation MRR rose from .385 to .428. Dropping seven components changed nothing, switching never beat SLIM, and the gain over EASE (+0.005 NDCG) is within the seed spread.
+
+\newpage
+%% =====================================================================
+\section{Task 2: Evaluating effectiveness}
+%% =====================================================================
+
+We implemented all metrics ourselves and validated them against RecBole: Precision, Recall, NDCG, MRR and Hit@10, plus coverage, genre intra-list diversity (ILD), novelty and average popularity. Users are grouped by training activity and share of popular films; items into head (the 337 most popular films, 64\% of test interactions), tail and cold. For the hybrid we inspect weights, list overlap and leave-one-out ablation. Offline accuracy partly rewards popularity, because the test data are as skewed as the training data.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lrrrrrr}
+\toprule
+Model & NDCG & MRR & Coverage & ILD & Novelty & Tail recall \\
+\midrule
+Pop & .101 & .190 & .037 & .712 & 8.04 & .000 \\
+UserKNN & .288 & .477 & .174 & .726 & 8.43 & .003 \\
+ItemKNN & .282 & .468 & .261 & .714 & 8.71 & .013 \\
+BPR & .286 & .477 & .307 & .711 & 8.66 & .024 \\
+NeuMF & .282 & .466 & \textbf{.315} & .718 & 8.71 & \textbf{.029} \\
+SLIM & .327 & .526 & .210 & .732 & 8.49 & .007 \\
+EASE & .331 & .531 & .227 & .727 & 8.51 & .009 \\
+FeatComb & .248 & .438 & .217 & .660 & 8.52 & .008 \\
+TunedWH & \textbf{.333} & \textbf{.533} & .219 & .728 & 8.50 & .008 \\
+\bottomrule
+\end{tabular}
+\caption{Test results @10, seed 2020. Other models and 3-seed means: Appendix~\ref{app:task2}.}
+\label{tab:task2}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{fig/fig_task2.png}
+\caption{(a) Accuracy vs.\ coverage. (b) Low to high activity: MRR rises, recall falls. (c) Tail exposure vs.\ tail recall.}
+\label{fig:task2}
+\end{figure}
+
+\subsection{Discussion}
+
+Popularity explains much of MovieLens-100K. Pop alone hits for 47\% of users, and every personalised model gives at least 94\% of its exposure to head films (Figure~\ref{fig:task2}c), so models differ mainly in how they order popular films per user. EASE and SLIM do this best, estimating co-occurrence directly without sampling noise. BPR and NeuMF smooth through latent factors, losing about 0.045 NDCG but gaining the highest coverage and the only real tail recall. Without its popularity feature, FeatureCombination's NDCG halves. Active users have more test items, which raises MRR but lowers recall (Figure~\ref{fig:task2}b).
+
+In the hybrid, EASE and SLIM are redundant (top-10 Jaccard .68), while NeuMF adds different films but gets a weight of only .11. The hybrid stays within 0.005 MRR of the best model in every user group but inherits their coverage and tail recall. A group-aware switch (Task 2.6) also lost accuracy, so the weakness lies with tail films, not user groups.
+
+\newpage
+%% =====================================================================
+\section{Task 3: Reranking for beyond-accuracy goals}
+%% =====================================================================
+
+All rerankers post-process a model's top-100 candidates, so they apply unchanged to any model, and greedily build the top-10 by maximising $(1-\lambda)$ times relevance plus $\lambda$ times an objective: genre diversity (ILD); calibration of the list's genre mix to the user's history (Steck, 2018); user-side fairness, matching each user's own share of popular and niche films (UPD); and item-side fairness, moving head/tail exposure towards catalogue proportions (20/80). We pick the strongest $\lambda \in \{0, .1, .25, .5, .75, 1\}$ that costs at most 5\% validation NDCG, so rerankers are compared at equal cost. For Task 3.3 we rerank either the aggregated hybrid or each component before aggregation.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lrrrrrrr}
+\toprule
+Reranker ($\lambda$) & NDCG & NDCG$^\dagger$ & ILD & Miscal. & UPD & Cov. & Tail \\
+\midrule
+None & .3326 & .3334 & .728 & .674 & .279 & .218 & 0.8\% \\
+Diversity (.25) & .3280 & .3232 & \textbf{.796} & .545 & .280 & .213 & 0.8\% \\
+Calibration (.1) & .3319 & .3287 & .761 & \textbf{.388} & .277 & .225 & 1.0\% \\
+User fair.\ (.25) & .3289 & .3281 & .720 & .677 & \textbf{.160} & .304 & 10.0\% \\
+Item fair.\ (.25) & .3319 & .3327 & .722 & .678 & .236 & .271 & 4.8\% \\
+\bottomrule
+\end{tabular}
+\caption{TunedWH on test, reranking the aggregate; $^\dagger$NDCG when each component is reranked first. Tail $=$ rank-discounted exposure share of tail films (11.3\% and 5.9\% for the two fairness rerankers when components are reranked first).}
+\label{tab:task3}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{fig/fig_task3.png}
+\caption{(a) NDCG change per activity group (95\% CI). (b) Tail outcomes; dotted lines show the hybrid without reranking.}
+\label{fig:task3}
+\end{figure}
+
+\subsection{Discussion}
+
+Every reranker improved its objective for under 1.5\% NDCG, for different reasons. Calibration was almost free (miscalibration $-$42\%) because a user's genre profile itself predicts what they like. Diversity made lists more varied but slightly lowered coverage, since it reshuffles genres among the same popular candidates.
+
+User-side fairness raised the tail share from 0.8\% to 10\% and the share of users with a relevant tail film from 2.4\% to 15\% for only $-$0.004 NDCG, so relevant tail films were already just below rank 10. Item-side fairness, asking every list for 80\% tail films, reached half that effect; working list by list, it cannot steer catalogue-wide exposure.
+
+Costs are uneven (Figure~\ref{fig:task3}a): users with few ratings lose accuracy under both fairness rerankers, while active users break even or gain. Reranking the aggregate worked better for diversity and calibration, whereas for fairness, reranking each component first reached slightly more of the tail at similar NDCG. We would deploy user-side fairness with a smaller $\lambda$ for new users.
+
+\newpage
+%% =====================================================================
+\appendix
+\renewcommand{\thetable}{\thesection\arabic{table}}
+\renewcommand{\thefigure}{\thesection\arabic{figure}}
+%% =====================================================================
+
+\section{Task 1 details}\label{app:task1}
+\setcounter{table}{0}\setcounter{figure}{0}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lll}
+\toprule
+Model & Expected strength & Expected limitation \\
+\midrule
+Random & floor; maximal coverage & no personalisation \\
+Pop & strong on head films & same list for all; no tail \\
+ItemKNN & explainable, stable similarities & noisy for rare films \\
+UserKNN & captures taste communities & unstable for sparse users \\
+BPR & optimises ranking directly & sampling noise; needs epochs \\
+FISM & helps users with few ratings & sensitive to regularisation \\
+NeuMF & flexible interaction function & data-hungry; overfits \\
+SLIM & accurate, sparse, interpretable & slow; drops weak links \\
+EASE & closed form; strong on dense data & memory grows with catalogue \\
+NGCF & multi-hop collaborative signal & many parameters; slow \\
+LightGCN & easier to train than NGCF & over-smoothing with depth \\
+FeatComb & uses genres and plot text & depends on metadata quality \\
+\bottomrule
+\end{tabular}
+\caption{Expected strengths and limitations behind our model selection.}
+\label{tab:rationale}
+\end{table}
+
+We left out sequential models, because a random split has no temporal order, and rating-prediction models, because the task is top-$K$ ranking of implicit feedback.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lll}
+\toprule
+Model & Values searched & Selected \\
+\midrule
+ItemKNN & $k \in \{50, 75, 100, 150, 200\}$ & $k=75$ \\
+UserKNN & $k \in \{25, 50, 75, 100, 200\}$ & $k=50$ \\
+BPR & $d$ \{32,64,128\}, lr \{1,3,5\}e-3, reg \{1e-5,1e-4\} & 64, 3e-3, 1e-5 \\
+FISM & $d$ \{32,64\}, $\alpha$ \{0,.5\}, reg \{1e-3,1e-2\} & 64, 0, 1e-3 \\
+NeuMF & $d$ \{32,64\}, dropout \{0--.3\}, lr \{1,3,5\}e-3 & 64, .1, 1e-3 \\
+NGCF & $d$ \{32,64\}, 2--3 layers, dropout, reg & 64, 2 layers \\
+LightGCN & $d$ \{32,64\}, 1--3 layers, lr \{1,3,5\}e-3 & 64, 2, 5e-3 \\
+SLIM & $\alpha$ \{.05,.1,.2,.5\}, l1 \{.01,.02,.1\} & .2, .01 \\
+EASE & $\lambda$ \{50,150,250,350,500\} & 350 \\
+FeatComb & hidden \{64,128\}, lr \{1,3\}e-3, reg \{1e-5,1e-4\} & 64, 3e-3, 1e-4 \\
+\bottomrule
+\end{tabular}
+\caption{Search spaces and selected settings (seed 2020).}
+\end{table}
+
+Weighted hybrid, validation MRR@10 for 1/5/10 negatives: .383/.427/.426 with all eleven components and .385/.427/.428 with the compact set \{SLIM, EASE, NeuMF, ItemKNN\}. The best activity switch reached .418, below SLIM alone (.422).
+
+\newpage
+\section{Task 2 details}\label{app:task2}
+\setcounter{table}{0}\setcounter{figure}{0}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lrrrrr}
+\toprule
+Component & Weights (3 seeds) & Contrib. & Jaccard & Wins & $\Delta$NDCG \\
+\midrule
+EASE & .45 / .44 / .42 & .348 & -- & 201 & $-$.0054 \\
+SLIM & .44 / .48 / .50 & .320 & .68 & 182 & +.0017 \\
+NeuMF & .11 / .08 / .07 & .101 & .40 & 199 & +.0004 \\
+ItemKNN & .00 / .00 / .00 & .000 & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+\caption{TunedWH coefficients. Contrib.\ $=$ share of top-10 score; Jaccard with EASE's list; Wins $=$ users where the component beats SLIM (NeuMF) or each other (EASE, SLIM); $\Delta$NDCG when removed and refitted.}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lrrrr@{\hspace{2.2em}}lrr}
+\toprule
+Model & NDCG & Recall & Cov. & Nov. & Model & NDCG & Cov. \\
+\midrule
+Pop & .106 & .090 & .037 & 8.07 & SLIM & .328 & .211 \\
+UserKNN & .282 & .245 & .174 & 8.44 & EASE & .327 & .225 \\
+ItemKNN & .276 & .235 & .256 & 8.72 & LightGCN & .251 & .170 \\
+BPR & .277 & .236 & .305 & 8.66 & FeatComb & .246 & .212 \\
+NeuMF & .275 & .232 & .292 & 8.67 & TunedWH & .332 & .215 \\
+\bottomrule
+\end{tabular}
+\caption{3-seed means (NGCF .210, Random .008 NDCG). Removing FeatComb's popularity feature drops its NDCG from .248 to .130.}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lrrrrrr}
+\toprule
+User group (MRR) & Pop & UserKNN & NeuMF & EASE & TunedWH & Group-aware \\
+\midrule
+Low activity & .065 & .330 & .295 & \textbf{.360} & .355 & .354 \\
+High activity & .317 & .628 & .646 & .706 & \textbf{.717} & .691 \\
+Low head share & .231 & .550 & .556 & .618 & \textbf{.626} & .625 \\
+High head share & .148 & .404 & .380 & \textbf{.444} & .442 & .415 \\
+\bottomrule
+\end{tabular}
+\caption{Test MRR@10 per user group (about 470 users each).}
+\end{table}
+
+The group-aware hybrid (Task 2.6) picks a full ranking per activity $\times$ head-share cell by validation MRR. It chose WeightedHybrid in three cells and ItemKNN in one, and lost on test (MRR .520 vs .532).
+
+\newpage
+\section{Task 3 details}\label{app:task3}
+\setcounter{table}{0}\setcounter{figure}{0}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.55\linewidth]{fig/fig_task3_val.png}
+\caption{Validation trade-offs of TunedWH for both pipelines; stars mark the selected $\lambda$.}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{llrrrrr}
+\toprule
+Model & Reranker & $\Delta$NDCG & $\Delta$ILD & $\Delta$Miscal. & $\Delta$UPD & $\Delta$Cov. \\
+\midrule
+EASE & diversity & $-$.006 & +.069 & $-$.137 & +.002 & $-$.013 \\
+ & calibration & $-$.002 & +.034 & $-$.299 & $-$.002 & +.004 \\
+ & user fairness & $-$.005 & $-$.009 & +.006 & $-$.130 & +.090 \\
+ & item fairness & $-$.000 & $-$.006 & +.002 & $-$.048 & +.057 \\
+\midrule
+FeatComb & diversity & $-$.003 & +.109 & $-$.195 & +.004 & $-$.005 \\
+ & calibration & $-$.002 & +.052 & $-$.358 & +.001 & +.001 \\
+ & user fairness & $-$.010 & $-$.016 & +.038 & $-$.129 & +.085 \\
+ & item fairness & $-$.008 & $-$.011 & +.023 & $-$.063 & +.066 \\
+\midrule
+Pop & diversity & +.006 & +.115 & $-$.374 & .000 & +.009 \\
+ & calibration & +.003 & +.053 & $-$.724 & .000 & +.045 \\
+ & user fairness & $-$.003 & $-$.002 & +.000 & $-$.012 & +.004 \\
+ & item fairness & $-$.006 & $-$.001 & +.000 & $-$.011 & +.007 \\
+\bottomrule
+\end{tabular}
+\caption{Test changes after reranking other models at their selected $\lambda$.}
+\end{table}
+
+FeatComb pays at least twice EASE's fairness cost because its relevance is mostly popularity. Limitations: one split for groups and reranking, a fixed 5\% budget, and popularity-based rather than protected groups.
+
+\textbf{Reference.} H.~Steck. Calibrated recommendations. In \emph{Proceedings of RecSys}, 2018.
+
+\end{document}
