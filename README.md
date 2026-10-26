@@ -1,402 +1,142 @@
 # RecSys Final Project - Group 26
 
-## Tasks 2.5 and 2.6: original-model groups and an adaptive hybrid
-
-```powershell
-python -m task2.group_analysis
-python -m unittest discover -s tests -p 'test_group_analysis.py'
-```
-
-See [the audit and plan](task2/TASK25_PLAN.md). The command evaluates all
-selected individual and hybrid models without reranking, then evaluates a
-four-cell user switch selected using validation MRR. Groups use only training
-activity and head-item preference; item groups cover head, tail and cold items.
-The minimum cell support is 30 validation users and the minimum switching gain
-is 0.005 MRR. Endpoints are allowed. Cross-fitted gate development results,
-paired test bootstrap intervals and validation reuse limits are recorded.
-
-Outputs in `results/task2_groups/` include `user_groups.csv`, `item_groups.csv`,
-`per_user.csv`, `paired_deltas.csv`, `gate_selection.csv`, `protocol.json`,
-`findings.md`, `report_sections.md` and `group_comparison.png`. Missing selected checkpoints are
-recovered locally. Weighted hybrids are refitted using the existing Task 3
-preparation protocol, reserving half of validation users for gate development;
-therefore these fresh comparisons may differ from the earlier Task 2.2 table.
-Use `--models EASE ItemKNN Pop Random` for an explicitly smaller experiment.
-Each run replaces only its chosen output directory (`--output-dir`).
-
-This repository contains the group project for DSAIT4335 Recommender Systems. The course fork of RecBole is pinned as a
-Git submodule at `third_party/RecBole_DSAIT4335`, pinned to course commit `439c5a8`.
+DSAIT4335 project on MovieLens 100K: individual and hybrid recommenders,
+independent accuracy and beyond-accuracy evaluation, and reranking for diversity,
+calibration and popularity-based fairness.
 
 ## Setup
 
-```powershell
+Requirements: Git and Python 3.11. Experiments run on CPU. The course RecBole
+repository is included as a Git submodule pinned to **`7aa0ec9`**, the corrected
+split-export version used for the results. No separate RecBole clone is needed.
+
+```bash
 git clone --recurse-submodules https://github.com/AndreiLeIttu/RecSys-Final-Project-Group-26.git Final_Project
 cd Final_Project
+```
+
+Create and activate the environment:
+
+```powershell
+# Windows (PowerShell)
 py -3.11 -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -r requirements-project.txt
 ```
 
-The committed Task 1.1-1.2 results were produced with Python 3.11.9 on CPU.
-
-On macOS/Linux, from the repository root:
-
 ```bash
-git submodule update --init --recursive
+# macOS / Linux
 python3.11 -m venv .venv
 source .venv/bin/activate
+```
+
+Then install the pinned dependencies:
+
+```bash
 python -m pip install --upgrade pip
 python -m pip install -r requirements-project.txt
 ```
 
-If Python 3.11 is not installed, `uv` can provision it and install the same dependencies:
+For an existing clone, run `git submodule update --init --recursive` after pulling
+the project. Keep the pinned revision rather than updating RecBole independently.
+The submodule includes the dataset; `data/movie_metadata.tsv` supplies movie
+metadata for the feature-combination hybrid.
+
+## Reproduce the experiments
+
+Run all commands below **from the repository root with the environment active**.
+Committed CSV/JSON results can be inspected immediately. Checkpoints and caches
+under `artifacts/` are not committed: a fresh clone retrains missing models using
+the saved best settings. CPU training is required and runtime depends on hardware.
+Reruns write to the result locations below and reuse available local checkpoints
+and caches where supported; small numerical differences between environments are
+possible.
+
+### 1. Individual models and hybrids (Task 1)
+
+The eleven individual models are Random, Pop, ItemKNN, UserKNN, BPR, FISM,
+SLIMElastic, EASE, NeuMF, NGCF and LightGCN. UserKNN uses RecBole's ItemKNN in
+user-based mode. Hybrids combine scores through regression, combine collaborative
+and metadata features, or switch between models by user activity.
 
 ```bash
-uv venv --python 3.11 .venv
-uv pip install --python .venv/bin/python -r requirements-project.txt
-source .venv/bin/activate
-```
-
-For an existing clone, initialize or update the pinned submodule with:
-
-```powershell
-git submodule update --init --recursive
-```
-
-Regenerate the corrected seeded split from the repository root:
-
-```powershell
+# Export the corrected seed-2020 train/validation/test split.
 python third_party/RecBole_DSAIT4335/save_split.py --model BPR --dataset ml-100k --config_files "task1/configs/common.yaml task1/configs/export_split.yaml" --output_dir saved/splits
-```
 
-## Project Layout
-
-- `task1/`: individual recommender models, tuning, and later hybrid models.
-
-## Task 1.1 and 1.2
-
-The implemented RecBole models are `Random`, `Pop`, `ItemKNN`, `UserKNN`, `BPR`, `FISM`, `SLIMElastic`, `EASE`, `NeuMF`,
-`NGCF`, and `LightGCN`. `UserKNN` uses RecBole's `ItemKNN` implementation in user-based mode.
-
-All models use MovieLens 100K with seed 2020, an 80/10/10 random-order user-grouped split, and full-ranking evaluation
-over unseen items. Models are selected by validation MRR@10 and evaluated with Precision, Recall, nDCG, MRR, and Hit@10.
-Neural models train for at most 20 epochs with per-epoch validation and early stopping; only the selected validation
-winner is evaluated on the test set. All observed interactions are treated as positive.
-
-Run the 49 coarse and focused validation trials for the nine primary models:
-
-```powershell
-python -m task1.tune_models
-```
-
-Run the 12 supplementary trials explicitly:
-
-```powershell
-python -m task1.tune_models --models FISM NGCF
-```
-
-Run selected models:
-
-```powershell
-python -m task1.tune_models --models LightGCN NGCF NeuMF
-```
-
-For a quick preliminary check, run only the first candidate per model:
-
-```powershell
-python -m task1.tune_models --models Random Pop --max-trials 1
-```
-
-Completed trials are reused when the command is run again.
-Partial reruns preserve archived rows in `results/tuning_trials.csv`, even when
-the ignored local JSONL is absent. Missing checkpoints are retrained.
-
-After selecting each configuration on seed-2020 validation MRR@10, estimate
-robustness across three seeds without retuning on test results. Each seed changes
-the random user-grouped split and, where applicable, stochastic model training:
-
-```powershell
-python -m task1.evaluate_seeds --seeds 2020 2021 2022
-```
-
-The pipeline writes:
-
-- `results/tuning_trials.csv`: every completed tuning trial.
-- `results/best_models.csv` and `results/best_models.json`: selected settings and test results.
-- `task1/configs/best/`: generated configuration for each selected model.
-- `artifacts/best/`: selected checkpoints (stored locally and not committed).
-
-After running the tuning pipeline, load a selected checkpoint with:
-
-```python
-from task1.experiment import load_data_and_model
-
-config, model, dataset, train_data, valid_data, test_data = (
-    load_data_and_model("artifacts/best/EASE.pth")
-)
-```
-
-## Feature combination hybrid
-
-`FeatureCombination` concatenates learned user/item embeddings and their elementwise product, user/movie genres,
-user/movie text vectors, and movie popularity. A neural network with one hidden layer produces a relevance score. It
-trains with pairwise logistic loss and RecBole's uniform negative sampling.
-
-The model is in `task1/feature_combination/model.py`, feature preparation is in `task1/feature_combination/features.py`,
-and settings are in `task1/configs/models/FeatureCombination.yaml`. It uses the same split and validation MRR@10
-selection as the individual models.
-
-Movie metadata in `data/movie_metadata.tsv` comes from Assignment 1's `movielens/items.txt` (original movie IDs, titles,
-genres, descriptions). Text embeddings use TF-IDF followed by a 32-dimensional SVD projection, cached under
-`artifacts/features/`. The text transform uses the available catalog metadata, including held-out items, but no held-out
-interaction labels. User profiles average the features of training-history movies; popularity is the normalized log of
-training interaction counts. Profiles and popularity are rebuilt for each training split and stored as checkpoint
-buffers.
-
-Tune its eight declared candidates and evaluate the validation winner:
-
-```powershell
-python -m task1.tune_models --models FeatureCombination
-```
-
-For a one-epoch validation-only installation check:
-
-```powershell
-python -c "from task1.experiment import train_model; from task1.model_registry import MODEL_SPECS; print(train_model(MODEL_SPECS['FeatureCombination'], {'epochs': 1, 'show_progress': False}))"
-```
-
-Load it through `task1.experiment.load_data_and_model`, just like other selected models. No pretrained collaborative
-checkpoint or transformer download is needed. After the smoke check, verify scoring, checkpoint reload, and feature
-switches with `python -m task1.feature_combination.check`. Feature-removal experiments use overrides `use_genres`,
-`use_text`, and `use_popularity`: disable all three for the interaction-only comparison, or disable each individually to
-measure its contribution. Select settings using validation before conducting the final test comparisons.
-
-## Task 1.3: Weighted hybrid recommender
-
-Run after setup, from the repository root:
-
-```bash
+# Recover selected individual models and fit the reference weighted hybrid.
 python -m task1.train_hybrid
-```
 
-This combines all eleven individual recommenders. It reuses local checkpoints in `artifacts/best/`. Since checkpoints
-are not committed, missing ones are automatically trained using the selected parameters in `results/best_models.json`
-and the model configurations. You do not need to repeat the 61 individual-model trials. The existing Task 1.2 result files are
-preserved. Training all missing models can take several minutes on CPU.
+# Repeat the nine primary individual models with fixed settings on three seeds.
+python -m task1.evaluate_seeds --seeds 2020 2021 2022
 
-For a smaller run, choose at least two distinct models:
-
-```bash
-python -m task1.train_hybrid --models Pop EASE
-```
-
-### How coefficients are learned
-
-1. Freeze the individual models trained on the original 80% training split. Check that every checkpoint reproduces the
-   same user/item token mappings and train/validation/test splits.
-2. Collect each model's full-catalog prediction scores. Min-max normalize scores separately for each user and model
-   using nonpadding items unseen in training. Constant score ranges become zero. This keeps different score scales
-   comparable.
-3. Build regression examples from all validation interactions (target 1) and five sampled unobserved items per positive
-   (target 0), without replacement per user. Exclude padding, training interactions, and validation positives from
-   negative sampling. Test labels are never used in fitting, normalization, or negative sampling. Unobserved items are
-   assumed negatives and may include future test positives; they are not verified dislikes.
-4. Fit a linear least-squares regression with an intercept, nonnegative model coefficients, and a sum-to-one constraint
-   using SciPy's SLSQP optimizer. Minimize `mean((intercept + X @ weights - targets) ** 2)`.
-5. Rank items by the learned weighted sum of normalized component scores. The intercept is saved for regression
-   predictions but has no effect on ranking. Evaluate once on the test split with the existing RecBole metrics and
-   history masking (training items for validation; training and validation items for test).
-
-The validation metrics are **fit diagnostics**, since this split was used both for individual-model selection and
-coefficient fitting. Test metrics are the held-out evaluation. This implements Task 1.3; hybrid hyperparameter tuning
-(Task 1.5) and independently implemented evaluation metrics (Task 2) remain separate work. Regression predictions are
-ranking scores, not calibrated probabilities, and need not fall in [0, 1].
-
-Options: `--negative-ratio 5` controls the sampled negative count; `--user-batch-size 16` controls score collection
-memory. Keep the batch size fixed for reproducibility: the course Random model draws new scores on each call.
-
-Outputs:
-
-- `results/weighted_hybrid.json`: weights, intercept, regression MSE, protocol, checkpoint paths, and validation/test
-  metrics.
-- `results/hybrid_coefficients.csv`: one learned coefficient per recommender.
-- `results/weighted_hybrid.csv`: test accuracy metrics.
-- `artifacts/hybrid/WeightedHybrid.npz`: frozen combined scores, coefficients, and user/item token mappings. This local
-  artifact preserves the exact scores, including the Random component, without rerunning base-model inference.
-
-Load the fitted hybrid for existing MovieLens users/items:
-
-```python
-from task1.train_hybrid import load_hybrid
-from recbole.data.interaction import Interaction
-import torch
-
-hybrid = load_hybrid()
-scores = hybrid.full_sort_predict(Interaction({"user_id": torch.tensor([1])}))
-```
-
-The example uses an internal RecBole user ID, not a raw MovieLens ID. The NPZ contains `user_tokens` and `item_tokens`
-to map IDs back to MovieLens. For a recommendation list, exclude padding item 0 and the user's observed items before
-sorting. The saved hybrid supports the existing catalog; adding users/items requires rebuilding it.
-
-## Task 2.1 and 2.2: Independent evaluation and comparison
-
-`task2.metrics` implements Precision@K, Recall@K, Hit@K, MRR@K, and nDCG@K from ordered item-ID lists and sets of
-relevant test items. Each is macro- averaged over test users with at least one test interaction, matching RecBole's
-ranking-evaluation user population. Users with no relevant items or empty recommendation lists score zero in the
-reusable metric functions. Precision uses K as its denominator, including when fewer than K candidates exist. Unit tests
-compare the implementations with RecBole for identical rankings. The evaluator also uses Task 1's full-sort test
-batches, history mask, and PyTorch top-K ordering, so its accuracy results match the stored Task 1 test results to their
-reported precision when evaluating the same checkpoint.
-
-Beyond-accuracy definitions:
-
-- **Coverage@K:** distinct recommended nonpadding items divided by the full nonpadding catalog size.
-- **IntraListDiversity@K:** for each user, mean pairwise cosine distance of binary movie-genre vectors in their top-K
-  list, then macro-averaged across evaluated users. Lists shorter than two items contribute zero.
-- **Novelty@K:** mean self-information in bits, `-log2(p(item))`, where
-  `p(item) = (training_count + 1) / (training_interactions + catalog_size)`.
-- **AveragePopularity@K:** mean raw training-interaction count of recommended items, pooled across evaluated users.
-
-All popularity values use training interactions only. Recommendations exclude padding, training items, and validation
-items. Test interactions are used only as relevance labels, never to fit a model, select parameters, or normalize
-scores. Rankings are cached by model checkpoint, split signature, and K under `artifacts/task2/recommendations/`.
-
-Run the comparison for all Task 1 models, using saved best parameters to recover missing individual checkpoints when
-possible:
-
-```bash
-python -m task2.evaluate
-```
-
-To evaluate only existing baseline checkpoints without triggering recovery:
-
-```bash
-python -m task2.evaluate --models Random Pop --topk 10 --no-recover-missing
-```
-
-`--models` accepts any of `Random`, `Pop`, `ItemKNN`, `UserKNN`, `BPR`, `FISM`, `SLIMElastic`, `EASE`, `NeuMF`, `NGCF`,
-`LightGCN`, `FeatureCombination`, `WeightedHybrid`, `TunedWeightedHybrid`, and `SwitchingHybrid`.
-FeatureCombination and the score hybrids are included only when their selected checkpoint/artifact is available
-(individual checkpoints can be recovered from saved Task 1 settings). Missing or failed models
-are listed in the evaluation summary.
-
-The combined accuracy and beyond-accuracy table is written to `results/task2/all_metrics.csv`.
-`results/task2/evaluation_summary.json` records the protocol, evaluated/skipped models,
-user/catalog sizes, interaction counts, and split signature. The current seed-2020
-table evaluates all 15 available variants without skips. Three-seed robustness
-results and hybrid analysis tables are in `results/hybrids/`.
-
-Run the Task 2 metric tests with:
-
-```bash
-python -m unittest discover -s tests -p 'test_task2_metrics.py'
-```
-
-## Task 3.1 and 3.2: Reranking
-
-We rerank a model's top 100 candidates into a final top 10. The four methods aim
-for genre diversity, genre calibration, user popularity preferences, and item exposure.
-We reuse Task 2's metrics and add calibration and fairness measures.
-
-```bash
-python -m task3.evaluate
-python -m task3.plot_results
-```
-
-The default experiment uses EASE, FeatureCombination, WeightedHybrid,
-TunedWeightedHybrid, SwitchingHybrid, Random, and Pop. Regression weights are
-refitted on Task 3's reserved validation users using Task 1's selected components
-and negative ratio. SwitchingHybrid reuses the selected switching rule (currently
-the SLIMElastic endpoint). Missing or outdated checkpoints are trained with the
-selected Task 1 settings and saved separately under `artifacts/task3/`. The first run can take a few minutes.
-
-For a smaller run:
-
-```bash
-python -m task3.evaluate --models EASE --output-dir results/task3-ease
-python -m task3.plot_results --directory results/task3-ease --models EASE
-```
-
-See [the method and evaluation notes](task3/README.md) and
-[the results discussion](results/task3/discussion.md).
-
-## Task 3.3: Hybrid reranking order
-
-Compare two ways to combine reranking with a weighted hybrid: rerank each
-component's list and aggregate the reranked lists with the hybrid's fitted
-weights, or aggregate the original component scores first and rerank that
-hybrid ranking. Both strategies use the same hybrid-derived candidate pool,
-reranking objectives, validation selection rule, and Task 2/3 metrics.
-
-```bash
-python -m task3.evaluate_hybrid_reranking
-```
-
-By default, this evaluates `TunedWeightedHybrid`; pass
-`--hybrids WeightedHybrid TunedWeightedHybrid` to compare both weighted hybrids. Validation
-trials and selected strengths are saved under `results/task3_3/`, along with
-the held-out test comparison and its protocol manifest. Component-list
-aggregation uses the existing hybrid weights applied to normalized rank scores.
-
-Generate the report-ready validation figure and held-out test table with:
-
-```bash
-python -m task3.plot_hybrid_reranking
-```
-
-This generates `Task3.3-TunedWeightedHybrid-validation-tradeoffs.png`
-(Figure 1) and `Task3.3-TunedWeightedHybrid-selected-test-table.png` (Table 1)
-in the results directory. The figure marks the original hybrid's validation
-NDCG and each strategy's selected strength; the table reports held-out NDCG
-and all four reranking quality metrics. Use `--svg` for optional SVG exports
-and `--directory` if results are elsewhere. Existing CSV outputs are retained.
-If multiple hybrids were evaluated, the same pair is generated for each.
-
-## Task 3.4: Group impact analysis
-
-Analyze whether the validation-selected rerankers affect users and items
-differently on the held-out test set:
-
-```bash
-python -m task3.analyze_groups
-```
-
-Users are split into low/high groups at the median number of training
-interactions. Items use the Task 3 popularity groups: head is the top 20% by
-training interaction count, and tail is the rest. The analysis compares each
-validation-selected reranker to the original hybrid's top-K ranking from the
-same saved candidate pool, with no group-specific retuning. It writes
-`user_groups.csv` (group accuracy and
-objective metrics, baseline/reranked values, changes, and paired 95% bootstrap
-intervals) and `item_groups.csv` (head/tail exposure share, recall, precision,
-and hit rate with baseline/reranked values, changes, intervals, and group
-sizes). Its three report figures are `Task3.4-TunedWeightedHybrid-user-group-accuracy.png`
-(Figure 2), `Task3.4-TunedWeightedHybrid-user-group-objectives.png` (Figure 3),
-and `Task3.4-TunedWeightedHybrid-item-group-exposure.png` (Figure 4). Item
-relevance metrics remain in the CSVs but do not produce additional default
-figures. Add `--svg` for optional SVG exports. All groups are defined from
-training data only; test interactions are used only to calculate held-out
-quality metrics. Confidence intervals are descriptive and are not treated as
-significance tests. Run Task 3.3 first so its saved test rankings and selected
-settings are available. Each additional evaluated hybrid receives the same
-three group figures.
-
-## Hybrid tuning and contribution analysis (Tasks 1.4-1.5, 2.3-2.4)
-
-From the repository root, run:
-
-```bash
+# Tune hybrids, run component/feature ablations, and repeat on two more seeds.
 python -m task1.hybrid_experiments
 python -m task1.hybrid_experiments --seed 2021
 python -m task1.hybrid_experiments --seed 2022
 ```
 
-The seed-2020 run selects FeatureCombination from eight candidates, compares
-full/compact regression hybrids at negative ratios 1/5/10 using three held-out
-validation-user folds, and selects an activity-based switch between SLIM and
-FeatureCombination. Four training-activity quantiles and both switch directions
-are considered, alongside the two single-model endpoints. An endpoint winner
-means switching did not improve validation performance. Other seeds reuse these
-choices and retrain the components. They change both split and training randomness.
+This uses the committed individual-model selections in `results/best_models.json`.
+The seed-2020 hybrid command also runs the eight feature-combination candidates.
+To reproduce the **individual-model search itself**, run these two commands before
+the commands above: `python -m task1.tune_models` (49 primary candidates) and
+`python -m task1.tune_models --models FISM NGCF` (12 supplementary candidates).
+The exact candidates are in `task1/search_spaces.yaml`.
+
+### 2. Independent evaluation and group analysis (Task 2)
+
+```bash
+python -m task2.evaluate
+python -m task2.group_analysis
+```
+
+The first command compares all 15 Task 1 variants using independently implemented
+accuracy, coverage, genre diversity, novelty and popularity metrics. The second
+compares training-defined user/item groups and evaluates a group-aware hybrid.
+
+### 3. Reranking and group impact (Task 3)
+
+```bash
+python -m task3.evaluate
+python -m task3.plot_results
+python -m task3.evaluate_hybrid_reranking
+python -m task3.plot_hybrid_reranking
+python -m task3.analyze_groups
+```
+
+These evaluate four rerankers, compare reranking before/after hybrid aggregation,
+and measure group impacts. Task 3.3 defaults to TunedWeightedHybrid; Task 3.4
+requires its saved rankings, so retain this execution order.
+
+## Results and protocol
+
+| Location | Contents |
+|---|---|
+| `results/tuning_trials.csv`, `results/best_models.json` | Tuning history and selected settings |
+| `results/model_summary.csv` | Three-seed individual-model accuracy |
+| `results/weighted_hybrid.json` | Reference regression hybrid and coefficients |
+| `results/hybrids/` | Hybrid tuning, three-seed comparison, coefficients and ablations |
+| `results/task2/` | Independent accuracy and beyond-accuracy comparison |
+| `results/task2_groups/` | User/item groups and group-aware hybrid |
+| `results/task3/` | Reranker selection, test results and trade-off figures |
+| `results/task3_3/` | Hybrid reranking order, group impacts and figures |
+
+All ratings are implicit positives. The main protocol is a user-grouped,
+random-order 80/10/10 split (seed 2020), full-catalog ranking, validation MRR@10
+selection, and test metrics at K=10. Test recommendations exclude training and
+validation items. Task 1 robustness seeds 2021/2022 change both splitting and
+training randomness. FISM and NGCF are supplementary single-seed comparisons.
+
+Task 2 group analysis and Task 3 refit regression weights on half the validation
+users, reserving the other half for gate/reranker selection. Their hybrid results
+can therefore differ from the original Task 2 comparison. Task 3's `--seed`
+controls sampling and validation-user partitioning, not a new base-model split.
+Protocol JSON files record settings and limitations. Interpretations belong in
+the report; CSV/JSON files retain the experimental evidence.
+
+## Checks
+
+```bash
+python -m unittest discover -s tests
+```
+
+This checks metrics, selection, tuning-history preservation, group analysis and
+reranking without rerunning the full training experiments.
